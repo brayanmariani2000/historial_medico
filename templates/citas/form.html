@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% url 'citas:lista' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <h4 class="mb-0 fw-600">{{ page_title }}</h4>
+</div>
+
+<div class="form-card" style="max-width:850px;">
+  <form method="post" novalidate id="citaForm">
+    {% csrf_token %}
+    <div class="row g-3">
+      <!-- Paciente -->
+      <div class="col-md-12">
+        <label class="form-label fw-600">Paciente <span class="text-danger">*</span></label>
+        {{ form.id_persona }}
+        {% if form.id_persona.errors %}<div class="text-danger small">{{ form.id_persona.errors.0 }}</div>{% endif %}
+      </div>
+
+      <!-- Area y Medico -->
+      <div class="col-md-6">
+        <label class="form-label fw-600">Área de Consulta (Especialidad)</label>
+        {{ form.id_especialidad }}
+        <p class="text-muted small mt-1">Filtre por área para ver los médicos disponibles.</p>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-600">Médico <span class="text-danger">*</span></label>
+        <div class="position-relative">
+          {{ form.id_medico }}
+          <div id="medicoLoader" class="spinner-border spinner-border-sm text-primary position-absolute top-50 end-0 translate-middle-y me-2 d-none" role="status"></div>
+        </div>
+        {% if form.id_medico.errors %}<div class="text-danger small">{{ form.id_medico.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-600">Tipo de Consulta <span class="text-danger">*</span></label>
+        {{ form.id_tipo_consulta }}
+      </div>
+      
+      <!-- Fecha y disponibilidad -->
+      <div class="col-md-6">
+        <label class="form-label fw-600">Fecha y Hora <span class="text-danger">*</span></label>
+        {{ form.fecha_cita }}
+        <div id="availabilityInfo" class="mt-2 small d-none alert alert-info py-1 px-2 border-0" style="border-radius: 8px;">
+          <i class="bi bi-info-circle me-1"></i>
+          <span id="availabilityText"></span>
+        </div>
+        {% if form.fecha_cita.errors %}<div class="text-danger small">{{ form.fecha_cita.errors.0 }}</div>{% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label fw-600">Prioridad (Triage)</label>
+        {{ form.id_triage }}
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label fw-600">Motivo de Consulta</label>
+        {{ form.motivo_consulta }}
+      </div>
+      
+      <div class="col-12">
+        <label class="form-label fw-600">Observaciones</label>
+        {{ form.observaciones }}
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-5 pt-3 border-top">
+      <button type="submit" class="btn btn-primary px-5 fw-600">
+        <i class="bi bi-calendar-check me-2"></i>{{ action }} Cita
+      </button>
+      <a href="{% if cita %}{% url 'citas:detalle' cita.pk %}{% else %}{% url 'citas:lista' %}{% endif %}" class="btn btn-outline-secondary px-4">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const especialidadSelect = document.getElementById('{{ form.id_especialidad.id_for_label }}');
+  const medicoSelect = document.getElementById('{{ form.id_medico.id_for_label }}');
+  const medicoLoader = document.getElementById('medicoLoader');
+  
+  const fechaInput = document.getElementById('{{ form.fecha_cita.id_for_label }}');
+  const availabilityInfo = document.getElementById('availabilityInfo');
+  const availabilityText = document.getElementById('availabilityText');
+
+  // Filter Doctors by Specialty
+  if (especialidadSelect) {
+    especialidadSelect.addEventListener('change', function() {
+      const espId = this.value;
+      if (!espId) {
+        // Reset to all active doctors or keep empty? User said show doctors associated to that area.
+        return;
+      }
+
+      medicoLoader.classList.remove('d-none');
+      fetch(`/core/ajax/medicos-por-especialidad/?especialidad_id=${espId}`)
+        .then(response => response.json())
+        .then(data => {
+          medicoSelect.innerHTML = '<option value="">---------</option>';
+          data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.text = item.nombre;
+            medicoSelect.add(option);
+          });
+          medicoLoader.classList.add('d-none');
+        })
+        .catch(error => {
+          console.error('Error fetching doctors:', error);
+          medicoLoader.classList.add('d-none');
+        });
+    });
+  }
+
+  // Check Availability for Date
+  if (fechaInput) {
+    fechaInput.addEventListener('change', function() {
+      const fullDate = this.value;
+      if (!fullDate) {
+        availabilityInfo.classList.add('d-none');
+        return;
+      }
+      
+      const dateOnly = fullDate.split('T')[0];
+      
+      fetch(`/core/ajax/disponibilidad-fecha/?fecha=${dateOnly}`)
+        .then(response => response.json())
+        .then(data => {
+          availabilityInfo.classList.remove('d-none');
+          if (data.count === 0) {
+            availabilityText.innerText = "No hay citas registradas para este día.";
+            availabilityInfo.className = "mt-2 small alert alert-success py-1 px-2 border-0";
+          } else {
+            availabilityText.innerText = `Hay ${data.count} cita(s) agendada(s) para este día.`;
+            availabilityInfo.className = "mt-2 small alert alert-info py-1 px-2 border-0";
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching availability:', error);
+        });
+    });
+  }
+});
+</script>
+{% endblock %}

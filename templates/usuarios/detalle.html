@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% url 'usuarios:lista' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <h4 class="mb-0 fw-700">{{ page_title }}</h4>
+</div>
+
+<div class="row g-4">
+
+  {# ── Columna izquierda: Avatar + datos básicos ── #}
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm text-center p-4" style="border-radius:18px;">
+      {# Avatar circular con iniciales #}
+      <div class="mx-auto mb-3 d-flex align-items-center justify-content-center fw-800 text-white"
+        style="width:90px;height:90px;border-radius:50%;font-size:2rem;
+          background:{% if usuario.rol == 'ADMINISTRADOR' %}linear-gradient(135deg,#dc2626,#e97316){% elif usuario.rol == 'MEDICO' %}linear-gradient(135deg,#059669,#0d9488){% elif usuario.rol == 'SECRETARIA' %}linear-gradient(135deg,#1a6db0,#2563eb){% else %}linear-gradient(135deg,#7c3aed,#9333ea){% endif %};">
+        {{ usuario.first_name|first|upper|default:usuario.username|first|upper }}
+      </div>
+
+      <h5 class="fw-700 mb-1">{{ usuario.get_full_name|default:usuario.username }}</h5>
+      <p class="text-muted small mb-3">@{{ usuario.username }}</p>
+
+      <span class="badge rounded-pill px-3 py-2 mb-3
+        {% if usuario.rol == 'ADMINISTRADOR' %}bg-danger{% elif usuario.rol == 'MEDICO' %}bg-success{% elif usuario.rol == 'SECRETARIA' %}bg-primary{% else %}bg-secondary{% endif %}"
+        style="font-size:.8rem;">
+        <i class="bi bi-shield-check me-1"></i>{{ usuario.get_rol_display }}
+      </span>
+
+      <div class="mb-3">
+        {% if usuario.activo %}
+        <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 rounded-pill px-3">
+          <i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>Activo
+        </span>
+        {% else %}
+        <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 rounded-pill px-3">
+          <i class="bi bi-circle me-1" style="font-size:.5rem;"></i>Inactivo
+        </span>
+        {% endif %}
+      </div>
+
+      <div class="d-grid gap-2 mt-2">
+        <a href="{% url 'usuarios:editar' usuario.pk %}" class="btn btn-primary">
+          <i class="bi bi-pencil-square me-1"></i>Editar Información
+        </a>
+        <a href="{% url 'usuarios:cambiar_password' usuario.pk %}" class="btn btn-outline-warning">
+          <i class="bi bi-key me-1"></i>Cambiar Contraseña
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {# ── Columna derecha: Info detallada ── #}
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm p-0" style="border-radius:18px;overflow:hidden;">
+
+      <div class="px-4 py-3 border-bottom" style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);">
+        <h6 class="fw-700 mb-0 text-dark">
+          <i class="bi bi-person-badge me-2 text-primary"></i>Información del Perfil
+        </h6>
+      </div>
+
+      <div class="p-4">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Nombre</div>
+              <div class="fw-600 text-dark">{{ usuario.first_name|default:"—" }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Apellido</div>
+              <div class="fw-600 text-dark">{{ usuario.last_name|default:"—" }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Nombre de Usuario</div>
+              <div class="fw-600 text-dark"><code>{{ usuario.username }}</code></div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Correo Electrónico</div>
+              <div class="fw-600 text-dark">{{ usuario.email|default:"—" }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Teléfono</div>
+              <div class="fw-600 text-dark">{{ usuario.telefono|default:"—" }}</div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Rol en el Sistema</div>
+              <div class="fw-600 text-dark">{{ usuario.get_rol_display }}</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    {# Bloque de metadatos del sistema #}
+    <div class="card border-0 shadow-sm p-0 mt-4" style="border-radius:18px;overflow:hidden;">
+      <div class="px-4 py-3 border-bottom" style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);">
+        <h6 class="fw-700 mb-0 text-dark">
+          <i class="bi bi-clock-history me-2 text-secondary"></i>Actividad del Sistema
+        </h6>
+      </div>
+      <div class="p-4">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Creado el</div>
+              <div class="fw-600 text-dark">{{ usuario.creado_en|date:"d/m/Y H:i" }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Última Actualización</div>
+              <div class="fw-600 text-dark">{{ usuario.actualizado_en|date:"d/m/Y H:i" }}</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Último Acceso</div>
+              <div class="fw-600 text-dark">
+                {% if usuario.last_login %}{{ usuario.last_login|date:"d/m/Y H:i" }}{% else %}Nunca{% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 rounded-3 bg-light">
+              <div class="text-muted small fw-600 text-uppercase mb-1" style="letter-spacing:.05em;">Superusuario</div>
+              <div class="fw-600 text-dark">{% if usuario.is_superuser %}
+                <span class="text-danger"><i class="bi bi-shield-fill-exclamation me-1"></i>Sí</span>
+              {% else %}No{% endif %}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

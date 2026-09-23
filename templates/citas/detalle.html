@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Detalle Cita #{{ cita.pk }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{% url 'citas:lista' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <div>
+    <h2 class="mb-0 fw-700" style="font-size:1.3rem;font-weight:700;">Cita #{{ cita.pk }}</h2>
+    <small class="text-muted">Registrada: {{ cita.fecha_registro|date:"d/m/Y H:i" }}</small>
+  </div>
+  <span class="ms-3 badge bg-{{ cita.id_estado_cita.get_badge_class }} px-3 py-2" style="font-size:0.85rem;">
+    {{ cita.id_estado_cita.nombre }}
+  </span>
+  <div class="ms-auto d-flex gap-2">
+    {% if user.rol in 'ADMINISTRADOR,SECRETARIA' or user.is_superuser %}
+    <a href="{% url 'citas:editar' cita.pk %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-pencil me-1"></i>Editar
+    </a>
+    {% endif %}
+    {% if not tiene_consulta and user.rol in 'ADMINISTRADOR,MEDICO' or user.is_superuser %}
+    <a href="{% url 'consultas:crear' cita.pk %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-file-earmark-plus me-1"></i>Registrar Consulta
+    </a>
+    {% endif %}
+    {% if tiene_consulta %}
+    <a href="{% url 'consultas:detalle' cita.consulta.pk %}" class="btn btn-outline-info btn-sm">
+      <i class="bi bi-file-medical me-1"></i>Ver Consulta
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="detail-section">
+      <h5><i class="bi bi-info-circle me-2"></i>Información de la Cita</h5>
+      <div class="detail-row"><span class="detail-label">Paciente</span>
+        <a href="{% url 'pacientes:detalle' cita.id_persona.pk %}" class="detail-value text-primary text-decoration-none">
+          {{ cita.id_persona }}
+        </a>
+      </div>
+      <div class="detail-row"><span class="detail-label">Médico</span>
+        <a href="{% url 'medicos:detalle' cita.id_medico.pk %}" class="detail-value text-primary text-decoration-none">
+          {{ cita.id_medico }}
+        </a>
+      </div>
+      <div class="detail-row"><span class="detail-label">Fecha y Hora</span><span class="detail-value fw-500">{{ cita.fecha_cita|date:"d/m/Y H:i" }}</span></div>
+      <div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">{{ cita.id_tipo_consulta }}</span></div>
+      <div class="detail-row"><span class="detail-label">Triage</span><span class="detail-value">{{ cita.id_triage|default:"-" }}</span></div>
+      <div class="detail-row"><span class="detail-label">Motivo</span><span class="detail-value">{{ cita.motivo_consulta|default:"-" }}</span></div>
+      <div class="detail-row"><span class="detail-label">Observaciones</span><span class="detail-value">{{ cita.observaciones|default:"-" }}</span></div>
+      {% if cita.motivo_cancelacion %}
+      <div class="detail-row text-danger"><span class="detail-label">Motivo Cancelación</span><span class="detail-value">{{ cita.motivo_cancelacion }}</span></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <!-- Change status -->
+    {% if not cita.id_estado_cita.es_final == 'SI' and user.rol in 'ADMINISTRADOR,SECRETARIA,MEDICO' or user.is_superuser %}
+    <div class="detail-section">
+      <h5><i class="bi bi-arrow-repeat me-2"></i>Cambiar Estado</h5>
+      <form method="post" action="{% url 'citas:cambiar_estado' cita.pk %}">
+        {% csrf_token %}
+        <div class="mb-2">
+          <select name="id_estado_cita" class="form-select form-select-sm" id="estadoSelect">
+            <option value="">— Seleccionar nuevo estado —</option>
+            {% for e in estados %}
+            <option value="{{ e.pk }}">{{ e.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2" id="motivoCancelDiv" style="display:none;">
+          <textarea name="motivo_cancelacion" class="form-control form-control-sm" rows="2" placeholder="Motivo de cancelación…"></textarea>
+        </div>
+        <button type="submit" class="btn btn-sm btn-primary">Actualizar Estado</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Estado timeline -->
+    <div class="detail-section">
+      <h5><i class="bi bi-clock-history me-2"></i>Cronología</h5>
+      <div class="detail-row"><span class="detail-label">Registrada</span><span class="detail-value">{{ cita.fecha_registro|date:"d/m/Y H:i" }}</span></div>
+      {% if cita.fecha_confirmacion %}
+      <div class="detail-row"><span class="detail-label">Confirmada</span><span class="detail-value text-success">{{ cita.fecha_confirmacion|date:"d/m/Y H:i" }}</span></div>
+      {% endif %}
+      {% if cita.fecha_cancelacion %}
+      <div class="detail-row"><span class="detail-label">Cancelada</span><span class="detail-value text-danger">{{ cita.fecha_cancelacion|date:"d/m/Y H:i" }}</span></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Load estado choices via admin or build a simple state selector
+const estadoSelect = document.getElementById('estadoSelect');
+const motivoDiv = document.getElementById('motivoCancelDiv');
+if (estadoSelect) {
+  estadoSelect.addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex].text;
+    if (motivoDiv) motivoDiv.style.display = opt.includes('CANCEL') ? 'block' : 'none';
+  });
+}
+</script>
+{% endblock %}
+{% endblock %}

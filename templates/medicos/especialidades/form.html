@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% url 'medicos:lista_especialidades' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <h4 class="mb-0 fw-700">{{ page_title }}</h4>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width: 700px; border-radius: 15px;">
+  <div class="card-body p-4">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-600">Código <span class="text-danger">*</span></label>
+          {{ form.codigo }}
+          <div class="form-text">Ej: CARD, PED, CIR</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-600">Nombre de la Especialidad <span class="text-danger">*</span></label>
+          {{ form.nombre }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-600">Rama Médica</label>
+          {{ form.rama }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-600">Duración Prevista (Años)</label>
+          {{ form.duracion_anios }}
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-600">Descripción / Detalles</label>
+          {{ form.descripcion }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-600">¿Está Activa?</label>
+          {{ form.activo }}
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-top">
+        <button type="submit" class="btn btn-primary px-5 fw-600">{{ action }} Especialidad</button>
+        <a href="{% url 'medicos:lista_especialidades' %}" class="btn btn-light">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

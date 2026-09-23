@@ -1,0 +1,895 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Sistema Médico{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ═══════════════════════════════════════════
+   SECRETARY DASHBOARD — Área Cards
+═══════════════════════════════════════════ */
+  .area-card {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .10), 0 6px 24px rgba(0, 0, 0, .06);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+    position: relative;
+  }
+
+  .area-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .16);
+  }
+
+  .area-card:active {
+    transform: translateY(-1px);
+  }
+
+  .area-card .area-header {
+    padding: 1.2rem 1.2rem .8rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .area-card .area-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: #fff;
+    margin-bottom: .7rem;
+  }
+
+  .area-card .area-name {
+    color: rgba(255, 255, 255, .9);
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    line-height: 1.3;
+  }
+
+  .area-card .area-count {
+    color: #fff;
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: .25rem 0;
+  }
+
+  .area-card .area-sub {
+    color: rgba(255, 255, 255, .7);
+    font-size: .74rem;
+  }
+
+  .area-card .area-footer {
+    background: rgba(0, 0, 0, .12);
+    padding: .5rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    color: rgba(255, 255, 255, .85);
+    font-size: .78rem;
+    font-weight: 500;
+  }
+
+  .area-card .area-footer i {
+    font-size: .9rem;
+  }
+
+  .area-card .area-pulse {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .7);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, .4);
+  }
+
+  .area-card .area-pulse.active {
+    animation: pulse-ring 1.6s ease infinite;
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 255, 255, .5);
+    }
+
+    70% {
+      box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+  }
+
+  /* ── Search Card (left col) ── */
+  .sec-search-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .07), 0 4px 16px rgba(0, 0, 0, .04);
+    overflow: hidden;
+  }
+
+  .sec-search-card .sec-header {
+    background: linear-gradient(135deg, #1a6db0 0%, #0d9488 100%);
+    padding: 1rem 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+
+  .sec-search-card .sec-header h5 {
+    color: #fff;
+    font-weight: 700;
+    margin: 0;
+    font-size: .95rem;
+  }
+
+  .sec-search-card .sec-header .badge-area {
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+    border-radius: 20px;
+    padding: .22rem .7rem;
+    font-size: .72rem;
+    font-weight: 600;
+  }
+
+  .sec-search-wrap {
+    padding: .9rem 1.1rem .5rem;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .sec-search-input-group {
+    position: relative;
+  }
+
+  .sec-search-input-group .search-icon {
+    position: absolute;
+    left: .85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  .sec-search-input-group .spinner-sm {
+    position: absolute;
+    right: .85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+  }
+
+  .sec-search-input-group input {
+    width: 100%;
+    padding: .6rem 2.5rem .6rem 2.4rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: .9rem;
+    font-family: inherit;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+    background: #fafafa;
+  }
+
+  .sec-search-input-group input:focus {
+    border-color: #1a6db0;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26, 109, 176, .12);
+  }
+
+  .sec-table-wrap {
+    overflow-x: auto;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+
+  .sec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .83rem;
+  }
+
+  .sec-table thead tr th {
+    background: #f8fafc;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: .55rem .85rem;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .sec-table tbody tr {
+    transition: background .15s;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .sec-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .sec-table tbody tr:hover {
+    background: #f0f9ff;
+  }
+
+  .sec-table tbody td {
+    padding: .55rem .85rem;
+    vertical-align: middle;
+  }
+
+  .sec-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .78rem;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 2px solid #bfdbfe;
+  }
+
+  .sec-avatar.fem {
+    background: #fce7f3;
+    color: #9d174d;
+    border-color: #f9a8d4;
+  }
+
+  .sec-empty {
+    padding: 2.2rem 1rem;
+    text-align: center;
+    color: #9ca3af;
+  }
+
+  .sec-empty i {
+    font-size: 2rem;
+    margin-bottom: .4rem;
+    display: block;
+  }
+
+  .sec-counter {
+    padding: .4rem 1.1rem;
+    font-size: .76rem;
+    color: #6b7280;
+    background: #f9fafb;
+    border-top: 1px solid #f3f4f6;
+  }
+
+  .hl {
+    background: #fef9c3;
+    border-radius: 3px;
+    padding: 0 1px;
+  }
+
+  @keyframes fadeInRow {
+    from {
+      opacity: 0;
+      transform: translateY(5px)
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0)
+    }
+  }
+
+  .sec-table tbody tr {
+    animation: fadeInRow .18s ease both;
+  }
+
+  /* ── Modal patients ── */
+  .modal-patients .modal-header {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .modal-patients .modal-title {
+    font-weight: 700;
+  }
+
+  .patients-modal-table {
+    font-size: .83rem;
+  }
+
+  .patients-modal-table thead th {
+    background: #f8fafc;
+    color: #6b7280;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid #e5e7eb;
+    padding: .5rem .8rem;
+  }
+
+  .patients-modal-table tbody td {
+    padding: .55rem .8rem;
+    vertical-align: middle;
+  }
+
+  .patients-modal-table tbody tr:hover {
+    background: #f0f9ff;
+  }
+
+  .badge-estado-agendada {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .badge-estado-confirmada {
+    background: #d1fae5;
+    color: #065f46;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if user.rol == 'SECRETARIA' %}
+
+{# ── Fila 1: Cards de Áreas de Consulta ── #}
+<div class="row g-3 mb-4">
+  {% if areas_consulta %}
+  {% for area in areas_consulta %}
+  <div class="col-6 col-md-4 col-lg-3" style="min-width:170px;">
+    <a href="{% url 'citas:atencion_area' area.id %}" class="text-decoration-none d-block h-100">
+      <div class="area-card h-100" style="background:{{ area.color.bg }};">
+        <div class="area-pulse {% if area.count > 0 %}active{% endif %}"></div>
+        <div class="area-header">
+          <div class="area-icon">
+            <i class="bi bi-hospital"></i>
+          </div>
+          <div class="area-name text-white">{{ area.nombre }}</div>
+          <div class="area-count text-white">{{ area.count }}</div>
+          <div class="area-sub text-white opacity-75">
+            {% if area.count == 1 %}paciente en espera{% else %}pacientes en espera{% endif %}
+          </div>
+        </div>
+        <div class="area-footer bg-white text-dark mt-3 p-2 text-center rounded-bottom"
+          style="font-size:0.85rem; font-weight:600;">
+          <i class="bi bi-clock me-1"></i> Gestionar Turnos
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="col-12">
+    <div class="alert alert-info border-0 rounded-3">
+      <i class="bi bi-info-circle me-2"></i>
+      No hay áreas de consulta activas. Configúralas en el panel de administración.
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{# ── Fila 2: Buscador (col-8) + Acciones Rápidas (col-4) ── #}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="sec-search-card">
+      <div class="sec-header">
+        <h5><i class="bi bi-person-search me-2"></i>Búsqueda de Pacientes</h5>
+        <span class="badge-area">
+          <i class="bi bi-calendar-date me-1"></i>{% now "d/m/Y" %}
+        </span>
+      </div>
+      <div class="sec-search-wrap">
+        <div class="sec-search-input-group">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" id="secSearchInput" placeholder="Buscar por nombre, apellido o número de cédula…"
+            autocomplete="off" spellcheck="false">
+          <div class="spinner-sm" id="secSpinner">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Buscando…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sec-table-wrap">
+        <table class="sec-table" id="secTable">
+          <thead>
+            <tr>
+              <th style="width:36px;"></th>
+              <th>Paciente</th>
+              <th>Documento</th>
+              <th>Edad</th>
+              <th>Sexo</th>
+              <th>Teléfono</th>
+              <th>Sangre</th>
+              <th class="text-end pe-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="secTableBody">
+            <tr>
+              <td colspan="8">
+                <div class="sec-empty">
+                  <i class="bi bi-person-lines-fill" style="color:#d1d5db;"></i>
+                  <p class="mb-0 mt-1" style="font-size:.84rem;">
+                    Escribe un nombre, apellido o cédula para buscar pacientes
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sec-counter" id="secCounter" style="display:none;">
+        <i class="bi bi-info-circle me-1"></i>
+        Mostrando <strong id="secCountNum">0</strong> resultado(s)
+        <span class="text-muted ms-1">(máximo 8)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="table-card h-100">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="mb-0 fw-700">
+          <i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Acciones Rápidas
+        </h5>
+      </div>
+      <div class="p-3 d-grid gap-3">
+        <div class="d-grid gap-2">
+          <label class="small text-muted fw-600">Pacientes y Citas</label>
+          <a href="{% url 'pacientes:crear' %}"
+            class="btn btn-primary d-flex align-items-center justify-content-between p-3 rounded-3 shadow-sm">
+            <div class="text-start">
+              <div class="fw-700">Registrar Paciente</div>
+              <div class="small opacity-75">Nuevo Perfil</div>
+            </div>
+            <i class="bi bi-person-plus fs-4"></i>
+          </a>
+          <a href="{% url 'pacientes:lista' %}"
+            class="btn btn-outline-primary d-flex align-items-center justify-content-between p-3 rounded-3">
+            <span>Listado Completo de Pacientes</span>
+            <i class="bi bi-people"></i>
+          </a>
+        </div>
+        <div class="d-grid gap-2">
+          <label class="small text-muted fw-600">Accesos Directos</label>
+          <a href="{% url 'citas:lista' %}" class="btn btn-light d-flex align-items-center justify-content-between p-2">
+            <span>Calendario de Citas</span>
+            <i class="bi bi-calendar3"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Modal: Lista de pacientes del área ── #}
+<div class="modal fade modal-patients" id="modalPacientesArea" tabindex="-1" aria-labelledby="modalAreaLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header px-4 pt-4">
+        <div>
+          <h5 class="modal-title fw-700" id="modalAreaLabel">
+            <i class="bi bi-hospital me-2 text-primary"></i>
+            <span id="modalAreaNombre">Área de Consulta</span>
+          </h5>
+          <div class="text-muted small mt-1">
+            <i class="bi bi-calendar-date me-1"></i>
+            Pacientes pendientes de atención — {% now "d \d\e F, Y" %}
+          </div>
+        </div>
+        <button type="button" class="btn-close ms-auto mt-1" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-0">
+        <div id="modalLoadingSpinner" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando…</span>
+          </div>
+          <div class="text-muted mt-2 small">Cargando pacientes…</div>
+        </div>
+        <div id="modalTableWrap" style="display:none;">
+          <table class="table patients-modal-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th></th>
+                <th>Paciente</th>
+                <th>Documento</th>
+                <th>Edad</th>
+                <th>Sexo</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th>Médico</th>
+                <th class="text-end pe-2">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="modalPacientesTbody"></tbody>
+          </table>
+        </div>
+        <div id="modalEmptyMsg" class="text-center py-5" style="display:none;">
+          <i class="bi bi-calendar-x text-muted" style="font-size:2.4rem;"></i>
+          <p class="text-muted mt-2">No hay pacientes pendientes en esta área hoy.</p>
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4">
+        <div class="me-auto small text-muted" id="modalContador"></div>
+        <a href="{% url 'citas:lista' %}" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-calendar3 me-1"></i>Ver todas las citas
+        </a>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% else %}
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-md-3">
+    <div class="stat-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="stat-icon" style="background:#dbeafe;color:#1d4ed8;"><i class="bi bi-people-fill"></i></div>
+        <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size:0.7rem;">Pacientes</span>
+      </div>
+      <div class="stat-value text-primary">{{ total_pacientes }}</div>
+      <div class="stat-label">Total de Pacientes</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="stat-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="stat-icon" style="background:#d1fae5;color:#065f46;"><i class="bi bi-bag-plus-fill"></i></div>
+        <span class="badge bg-success bg-opacity-10 text-success" style="font-size:0.7rem;">Personal</span>
+      </div>
+      <div class="stat-value text-success">{{ total_medicos }}</div>
+      <div class="stat-label">Médicos Activos</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="stat-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="stat-icon" style="background:#fef3c7;color:#92400e;"><i class="bi bi-calendar2-event-fill"></i>
+        </div>
+        <span class="badge bg-warning bg-opacity-10 text-warning" style="font-size:0.7rem;">Hoy</span>
+      </div>
+      <div class="stat-value text-warning">{{ citas_hoy_count }}</div>
+      <div class="stat-label">Citas Programadas</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="stat-card">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="stat-icon" style="background:#ede9fe;color:#5b21b6;"><i class="bi bi-clock-history"></i></div>
+        <span class="badge bg-primary bg-opacity-10 text-purple" style="font-size:0.7rem;">Total</span>
+      </div>
+      <div class="stat-value" style="color:#5b21b6;">{{ citas_pendientes_global }}</div>
+      <div class="stat-label">Citas Pendientes</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="table-card overflow-hidden">
+      <div class="card-header bg-white border-bottom p-3 d-flex align-items-center justify-content-between">
+        <h5 class="mb-0 fw-700">
+          <i class="bi bi-calendar3-event me-2 text-primary"></i>
+          {% if user.rol == 'MEDICO' %}Mi Agenda de Hoy{% else %}Atención del Día (Citas){% endif %}
+        </h5>
+        <div class="d-flex gap-2">
+          <span class="badge bg-light text-muted border py-2 px-3">
+            <i class="bi bi-calendar-event me-1"></i> {% now "d/m/Y" %}
+          </span>
+          <a href="{% url 'citas:lista' %}" class="btn btn-sm btn-primary">Ver histórico</a>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th class="ps-3 border-0">Hora</th>
+              <th class="border-0">Paciente</th>
+              {% if user.rol != 'MEDICO' %}<th class="border-0">Médico</th>{% endif %}
+              <th class="border-0">Estado</th>
+              <th class="text-end pe-3 border-0">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cita in citas_hoy_lista %}
+            <tr>
+              <td class="ps-3">
+                <span class="fw-600 text-dark">{{ cita.fecha_cita|date:"H:i" }}</span>
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="user-avatar"
+                    style="width:32px;height:32px;font-size:0.8rem;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;">
+                    {{ cita.id_persona.id_nombre.nombre|first|upper }}
+                  </div>
+                  <div>
+                    <div class="fw-500 text-dark">{{ cita.id_persona }}</div>
+                    <div class="text-muted small">CI: {{ cita.id_persona.numero_documento }}</div>
+                  </div>
+                </div>
+              </td>
+              {% if user.rol != 'MEDICO' %}
+              <td>
+                <div class="small fw-500">{{ cita.id_medico }}</div>
+                <div class="text-muted" style="font-size:0.75rem;">Especialista</div>
+              </td>
+              {% endif %}
+              <td>
+                <span
+                  class="badge rounded-pill bg-{{ cita.id_estado_cita.get_badge_class }} bg-opacity-10 text-{{ cita.id_estado_cita.get_badge_class }} px-3 border border-{{ cita.id_estado_cita.get_badge_class }} border-opacity-25">
+                  {{ cita.id_estado_cita.nombre }}
+                </span>
+              </td>
+              <td class="text-end pe-3">
+                <div class="btn-group">
+                  <a href="{% url 'citas:detalle' cita.pk %}" class="btn btn-sm btn-outline-primary"
+                    title="Ver detalle">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  {% if user.rol == 'MEDICO' and cita.id_estado_cita.nombre != 'COMPLETADA' %}
+                  <a href="{% url 'consultas:crear' %}?cita_id={{ cita.pk }}" class="btn btn-sm btn-success"
+                    title="Iniciar Consulta">
+                    <i class="bi bi-clipboard2-pulse"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-5">
+                <div class="text-muted opacity-50 mb-2 mt-2"><i class="bi bi-calendar-x fs-1"></i></div>
+                <h6 class="text-muted">No hay citas programadas para hoy.</h6>
+                <p class="text-muted small">Las nuevas citas aparecerán aquí automáticamente.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="table-card h-100">
+      <div class="card-header bg-white border-bottom p-3">
+        <h5 class="mb-0 fw-700"><i class="bi bi-lightning-charge-fill me-2 text-warning"></i>Acciones Rápidas</h5>
+      </div>
+      <div class="p-3 d-grid gap-3">
+        {% if user.rol == 'ADMINISTRADOR' or user.is_superuser %}
+        <div class="d-grid gap-2">
+          <label class="small text-muted fw-600">Pacientes y Citas</label>
+          <a href="{% url 'pacientes:crear' %}"
+            class="btn btn-primary d-flex align-items-center justify-content-between p-3 rounded-3 shadow-sm">
+            <div class="text-start">
+              <div class="fw-700">Registrar Paciente</div>
+              <div class="small opacity-75">Nuevo Perfil</div>
+            </div>
+            <i class="bi bi-person-plus fs-4"></i>
+          </a>
+          <a href="{% url 'pacientes:lista' %}"
+            class="btn btn-outline-primary d-flex align-items-center justify-content-between p-3 rounded-3">
+            <span>Listado de Pacientes</span>
+            <i class="bi bi-search"></i>
+          </a>
+        </div>
+        {% endif %}
+        {% if user.rol == 'ANALISTA' or user.rol == 'ADMINISTRADOR' or user.is_superuser %}
+        <div class="d-grid gap-2">
+          <label class="small text-muted fw-600">Analítica</label>
+          <a href="{% url 'core:estadisticas' %}"
+            class="btn btn-outline-success d-flex align-items-center justify-content-between p-3 rounded-3">
+            <span>Visualizar Estadísticas</span>
+            <i class="bi bi-graph-up-arrow"></i>
+          </a>
+        </div>
+        {% endif %}
+        {% if user.rol == 'MEDICO' %}
+        <div class="d-grid gap-2">
+          <label class="small text-muted fw-600">Consultas</label>
+          <a href="{% url 'consultas:lista' %}"
+            class="btn btn-outline-info d-flex align-items-center justify-content-between p-3 rounded-3">
+            <span>Historial Médico</span>
+            <i class="bi bi-journal-medical"></i>
+          </a>
+        </div>
+        {% endif %}
+        <div class="d-grid gap-2">
+          <label class="small text-muted fw-600">Accesos Directos</label>
+          <a href="{% url 'citas:lista' %}" class="btn btn-light d-flex align-items-center justify-content-between p-2">
+            <span>Calendario de Citas</span>
+            <i class="bi bi-calendar3"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endif %}{# fin if SECRETARIA #}
+{% endblock %}
+
+
+{% block extra_js %}
+{% if user.rol == 'SECRETARIA' %}
+<script>
+  (function () {
+    'use strict';
+
+    /* ── BÚSQUEDA DE PACIENTES ─────────────────── */
+    const input = document.getElementById('secSearchInput');
+    const tbody = document.getElementById('secTableBody');
+    const spinner = document.getElementById('secSpinner');
+    const counter = document.getElementById('secCounter');
+    const countNum = document.getElementById('secCountNum');
+    const SEARCH_URL = '{% url "pacientes:buscar_ajax" %}';
+
+    let debounceTimer = null;
+    let currentQuery = '';
+    let controller = null;
+
+    function escHtml(str) {
+      const d = document.createElement('div');
+      d.appendChild(document.createTextNode(String(str)));
+      return d.innerHTML;
+    }
+    function hl(text, q) {
+      if (!q) return escHtml(text);
+      const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      return escHtml(text).replace(re, '<span class="hl">$1</span>');
+    }
+    function sexBadge(s) {
+      return s === 'MASCULINO'
+        ? '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2">M</span>'
+        : '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2">F</span>';
+    }
+    function emptyState(msg, icon) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="sec-empty">
+      <i class="bi ${icon}" style="color:#d1d5db;"></i>
+      <p class="mb-0 mt-1" style="font-size:.83rem;">${msg}</p>
+    </div></td></tr>`;
+      counter.style.display = 'none';
+    }
+    function renderPacientes(list, q) {
+      if (!list.length) { emptyState('No se encontraron pacientes con ese criterio.', 'bi-person-x'); return; }
+      tbody.innerHTML = list.map((p, i) => `
+      <tr style="animation-delay:${i * 25}ms">
+        <td><div class="sec-avatar ${p.sexo === 'FEMENINO' ? 'fem' : ''}">${escHtml(p.nombre.charAt(0).toUpperCase())}</div></td>
+        <td><div class="fw-600 text-dark">${hl(p.nombre, q)}</div></td>
+        <td><span class="badge bg-light text-dark border" style="font-size:.76rem;font-family:monospace">${escHtml(p.tipo_doc)}: ${hl(p.documento, q)}</span></td>
+        <td><span class="fw-500">${escHtml(p.edad)}</span> <span class="text-muted small">años</span></td>
+        <td>${sexBadge(p.sexo)}</td>
+        <td class="text-muted small">${escHtml(p.telefono)}</td>
+        <td><span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2" style="font-size:.73rem;">${escHtml(p.tipo_sangre)}</span></td>
+        <td class="text-end pe-3">
+          <div class="btn-group">
+            <a href="${escHtml(p.url_detalle)}" class="btn btn-sm btn-outline-primary" title="Ver perfil"><i class="bi bi-person-vcard"></i></a>
+            <a href="/citas/nueva/?paciente=${escHtml(p.id)}" class="btn btn-sm btn-outline-success" title="Agendar cita"><i class="bi bi-calendar-plus"></i></a>
+          </div>
+        </td>
+      </tr>`).join('');
+      countNum.textContent = list.length;
+      counter.style.display = 'block';
+    }
+
+    async function doSearch(q) {
+      if (controller) controller.abort();
+      controller = new AbortController();
+      spinner.style.display = 'block';
+      try {
+        const r = await fetch(`${SEARCH_URL}?q=${encodeURIComponent(q)}`, {
+          signal: controller.signal,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!r.ok) throw new Error('err');
+        renderPacientes((await r.json()).pacientes, q);
+      } catch (e) {
+        if (e.name !== 'AbortError') emptyState('Error en la búsqueda. Intenta de nuevo.', 'bi-exclamation-triangle');
+      } finally {
+        spinner.style.display = 'none';
+      }
+    }
+
+    input.addEventListener('input', function () {
+      const q = this.value.trim();
+      clearTimeout(debounceTimer);
+      if (!q) {
+        emptyState('Escribe un nombre, apellido o cédula para buscar pacientes', 'bi-person-lines-fill');
+        counter.style.display = 'none';
+        currentQuery = '';
+        return;
+      }
+      if (q === currentQuery) return;
+      currentQuery = q;
+      spinner.style.display = 'block';
+      debounceTimer = setTimeout(() => doSearch(q), 300);
+    });
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { input.value = ''; input.dispatchEvent(new Event('input')); input.blur(); }
+    });
+
+    /* ── MODAL PACIENTES POR ÁREA ──────────────── */
+    const AREA_URL = '{% url "citas:pacientes_por_area" %}';
+    const modal = new bootstrap.Modal(document.getElementById('modalPacientesArea'));
+    const modalTitle = document.getElementById('modalAreaNombre');
+    const spinner2 = document.getElementById('modalLoadingSpinner');
+    const tableWrap = document.getElementById('modalTableWrap');
+    const emptyMsg = document.getElementById('modalEmptyMsg');
+    const tableTbody = document.getElementById('modalPacientesTbody');
+    const modalCnt = document.getElementById('modalContador');
+
+    window.abrirModalArea = async function (areaId, areaNombre) {
+      modalTitle.textContent = areaNombre;
+      spinner2.style.display = 'block';
+      tableWrap.style.display = 'none';
+      emptyMsg.style.display = 'none';
+      modalCnt.textContent = '';
+      modal.show();
+
+      try {
+        const r = await fetch(`${AREA_URL}?area_id=${areaId}`, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await r.json();
+        spinner2.style.display = 'none';
+
+        if (!data.pacientes || !data.pacientes.length) {
+          emptyMsg.style.display = 'block';
+          return;
+        }
+
+        const estadoBadge = e => e === 'AGENDADA'
+          ? '<span class="badge badge-estado-agendada rounded-pill px-2">Agendada</span>'
+          : '<span class="badge badge-estado-confirmada rounded-pill px-2">Confirmada</span>';
+
+        tableTbody.innerHTML = data.pacientes.map((p, i) => `
+        <tr style="animation-delay:${i * 20}ms">
+          <td><span class="fw-700 text-primary">${escHtml(p.hora)}</span></td>
+          <td><div class="sec-avatar ${p.sexo === 'FEMENINO' ? 'fem' : ''}" style="width:30px;height:30px;font-size:.75rem;">${escHtml(p.nombre.charAt(0).toUpperCase())}</div></td>
+          <td>
+            <div class="fw-600">${escHtml(p.nombre)}</div>
+            <div class="text-muted small" style="font-family:monospace">CI: ${escHtml(p.documento)}</div>
+          </td>
+          <td class="text-muted small" style="font-family:monospace">${escHtml(p.documento)}</td>
+          <td>${escHtml(p.edad)} <span class="text-muted small">años</span></td>
+          <td>${sexBadge(p.sexo)}</td>
+          <td class="text-muted small">${escHtml(p.telefono)}</td>
+          <td>${estadoBadge(p.estado)}</td>
+          <td class="small">${escHtml(p.medico)}</td>
+          <td class="text-end pe-2">
+            <div class="btn-group">
+              <a href="${escHtml(p.url_detalle_paciente)}" class="btn btn-sm btn-outline-primary" title="Perfil"><i class="bi bi-person-vcard"></i></a>
+              <a href="${escHtml(p.url_detalle_cita)}" class="btn btn-sm btn-outline-secondary" title="Cita"><i class="bi bi-eye"></i></a>
+            </div>
+          </td>
+        </tr>`).join('');
+
+        tableWrap.style.display = 'block';
+        modalCnt.textContent = `${data.total} paciente${data.total !== 1 ? 's' : ''} pendiente${data.total !== 1 ? 's' : ''}`;
+      } catch (e) {
+        spinner2.style.display = 'none';
+        emptyMsg.style.display = 'block';
+      }
+    };
+
+  })();
+</script>
+{% endif %}
+{% endblock %}

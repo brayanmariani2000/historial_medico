@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Citas{% endblock %}
+{% block content %}
+
+<!-- Filters -->
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4">
+    <div class="input-group">
+      <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+      <input type="text" name="q" value="{{ q }}" class="form-control border-start-0" placeholder="Buscar paciente…">
+    </div>
+  </div>
+  <div class="col-md-3">
+    <select name="estado" class="form-select">
+      <option value="">Todos los estados</option>
+      {% for e in estados %}
+      <option value="{{ e.nombre }}" {% if e.nombre == estado_sel %}selected{% endif %}>{{ e.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <input type="date" name="fecha" value="{{ fecha_sel }}" class="form-control">
+  </div>
+  <div class="col-md-2 d-flex gap-2">
+    <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
+    {% if q or estado_sel or fecha_sel %}
+    <a href="{% url 'citas:lista' %}" class="btn btn-outline-secondary"><i class="bi bi-x"></i></a>
+    {% endif %}
+  </div>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <span class="text-muted" style="font-size:0.85rem;">{{ citas.count }} cita(s) encontrada(s)</span>
+
+</div>
+
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Paciente</th>
+          <th>Médico</th>
+          <th>Fecha y Hora</th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cita in citas %}
+        <tr>
+          <td class="text-muted">#{{ cita.pk }}</td>
+          <td>{{ cita.id_persona }}</td>
+          <td class="text-muted">{{ cita.id_medico }}</td>
+          <td>{{ cita.fecha_cita|date:"d/m/Y H:i" }}</td>
+          <td><span class="badge bg-light text-dark border" style="font-size:0.72rem;">{{ cita.id_tipo_consulta }}</span></td>
+          <td><span class="badge bg-{{ cita.id_estado_cita.get_badge_class }}">{{ cita.id_estado_cita.nombre }}</span>
+          </td>
+          <td class="text-end">
+            <a href="{% url 'citas:detalle' cita.pk %}" class="btn btn-sm btn-outline-primary"><i
+                class="bi bi-eye"></i></a>
+            {% if user.rol in 'ADMINISTRADOR,SECRETARIA' or user.is_superuser %}
+            <a href="{% url 'citas:editar' cita.pk %}" class="btn btn-sm btn-outline-secondary"><i
+                class="bi bi-pencil"></i></a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-5">
+            <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>No hay citas para mostrar.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Consulta #{{ consulta.pk }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{% url 'consultas:lista' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <div>
+    <h2 class="mb-0 fw-700" style="font-size:1.3rem;font-weight:700;">Consulta #{{ consulta.pk }}</h2>
+    <small class="text-muted">{{ consulta.id_cita.id_persona }} · {{ consulta.fecha_consulta|date:"d/m/Y H:i" }}</small>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Vitals -->
+  <div class="col-lg-4">
+    <div class="detail-section">
+      <h5><i class="bi bi-activity me-2"></i>Signos Vitales</h5>
+      <div class="detail-row"><span class="detail-label">Presión Arterial</span><span class="detail-value">{{ consulta.presion_arterial|default:"-" }}</span></div>
+      <div class="detail-row"><span class="detail-label">Frec. Cardíaca</span><span class="detail-value">{{ consulta.frecuencia_cardiaca|default:"-" }} lpm</span></div>
+      <div class="detail-row"><span class="detail-label">Temperatura</span><span class="detail-value">{% if consulta.temperatura %}{{ consulta.temperatura }} °C{% else %}-{% endif %}</span></div>
+      <div class="detail-row"><span class="detail-label">Saturación O₂</span><span class="detail-value">{% if consulta.saturacion_oxigeno %}{{ consulta.saturacion_oxigeno }}%{% else %}-{% endif %}</span></div>
+      <div class="detail-row"><span class="detail-label">Peso</span><span class="detail-value">{% if consulta.peso %}{{ consulta.peso }} kg{% else %}-{% endif %}</span></div>
+      <div class="detail-row"><span class="detail-label">Talla</span><span class="detail-value">{% if consulta.talla %}{{ consulta.talla }} cm{% else %}-{% endif %}</span></div>
+      {% if consulta.imc %}
+      <div class="detail-row"><span class="detail-label">IMC</span>
+        <span class="detail-value fw-500">{{ consulta.imc }}
+          <span class="badge {% if consulta.imc < 18.5 %}bg-info{% elif consulta.imc < 25 %}bg-success{% elif consulta.imc < 30 %}bg-warning text-dark{% else %}bg-danger{% endif %}" style="font-size:0.7rem;">
+            {% if consulta.imc < 18.5 %}Bajo peso{% elif consulta.imc < 25 %}Normal{% elif consulta.imc < 30 %}Sobrepeso{% else %}Obesidad{% endif %}
+          </span>
+        </span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Síntomas -->
+    <div class="detail-section">
+      <h5><i class="bi bi-thermometer me-2"></i>Síntomas</h5>
+      {% for s in consulta.sintomas.all %}
+      <div class="d-flex justify-content-between py-1 border-bottom">
+        <span style="font-size:0.875rem;">{{ s.id_sintoma.nombre }}</span>
+        {% if s.intensidad %}<span class="badge bg-warning text-dark">{{ s.intensidad }}/10</span>{% endif %}
+      </div>
+      {% empty %}<p class="text-muted" style="font-size:0.85rem;">Sin síntomas registrados.</p>{% endfor %}
+    </div>
+  </div>
+
+  <!-- Clinical Notes -->
+  <div class="col-lg-8">
+    <div class="detail-section">
+      <h5><i class="bi bi-clipboard2-pulse me-2"></i>Notas Clínicas</h5>
+      
+      <div class="mb-3 p-3 bg-light rounded">
+        <h6 class="text-uppercase text-muted mb-2" style="font-size:0.75rem;letter-spacing:0.05em;">Antecedentes del Paciente</h6>
+        <div class="row g-2" style="font-size:0.85rem;">
+          <div class="col-md-4">
+            <strong>Familiares:</strong>
+            <ul class="list-unstyled mb-0 ms-2">
+              {% for a in consulta.id_cita.id_persona.antecedentes.all %}
+                {% if a.id_antecedente.categoria == 'FAMILIAR' %}<li>- {{ a.id_antecedente.nombre }}</li>{% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-4">
+            <strong>Personales:</strong>
+            <ul class="list-unstyled mb-0 ms-2">
+              {% for a in consulta.id_cita.id_persona.antecedentes.all %}
+                {% if a.id_antecedente.categoria == 'PERSONAL' %}<li>- {{ a.id_antecedente.nombre }}</li>{% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+          <div class="col-md-4">
+            <strong>Quirúrgicos:</strong>
+            <ul class="list-unstyled mb-0 ms-2">
+              {% for a in consulta.id_cita.id_persona.antecedentes.all %}
+                {% if a.id_antecedente.categoria == 'QUIRURGICO' %}<li>- {{ a.id_antecedente.nombre }}</li>{% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <div class="text-muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Síntomas Principales</div>
+        <p class="mb-0">{{ consulta.sintomas_principales }}</p>
+      </div>
+      {% if consulta.examen_fisico %}
+      <div class="mb-3">
+        <div class="text-muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Examen Físico</div>
+        <p class="mb-0">{{ consulta.examen_fisico }}</p>
+      </div>
+      {% endif %}
+      {% if consulta.tratamiento_prescrito %}
+      <div class="mb-3">
+        <div class="text-muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Tratamiento</div>
+        <p class="mb-0">{{ consulta.tratamiento_prescrito }}</p>
+      </div>
+      {% endif %}
+      {% if consulta.recomendaciones %}
+      <div>
+        <div class="text-muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">Recomendaciones</div>
+        <p class="mb-0">{{ consulta.recomendaciones }}</p>
+      </div>
+      {% endif %}
+      {% if consulta.proxima_cita %}
+      <div class="mt-3 p-2 rounded" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+        <i class="bi bi-calendar-check text-success me-2"></i>
+        <strong>Próxima cita:</strong> {{ consulta.proxima_cita|date:"d/m/Y" }}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Diagnósticos -->
+    <div class="detail-section">
+      <h5><i class="bi bi-journal-medical me-2"></i>Diagnósticos</h5>
+      {% for d in consulta.diagnosticos.all %}
+      <div class="d-flex align-items-start justify-content-between py-2 border-bottom">
+        <div>
+          <span class="fw-500">{{ d.enfermedad }}</span>
+          {% if d.es_principal == 'SI' %}<span class="badge bg-primary ms-2" style="font-size:0.7rem;">Principal</span>{% endif %}
+          {% if d.observaciones %}<div class="text-muted" style="font-size:0.8rem;">{{ d.observaciones }}</div>{% endif %}
+        </div>
+        <span class="badge bg-light text-dark border">{{ d.tipo }}</span>
+      </div>
+      {% empty %}<p class="text-muted" style="font-size:0.85rem;">Sin diagnósticos registrados.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

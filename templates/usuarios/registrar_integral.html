@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% url 'usuarios:lista' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <div>
+    <h4 class="mb-0 fw-700">{{ page_title }}</h4>
+    <small class="text-muted">Alta de nuevo integrante del sistema</small>
+  </div>
+</div>
+
+<div class="wizard-card mx-auto" style="max-width: 900px;">
+  <div class="wizard-header" style="background: linear-gradient(135deg, #1e293b 0%, #334155 60%, #475569 100%);">
+    <h5><i class="bi bi-shield-plus me-2"></i>Alta de Personal del Sistema</h5>
+    <p>Defina la identidad y el nivel de acceso para el nuevo integrante.</p>
+    <i class="bi bi-shield-lock-fill wizard-header-icon"></i>
+  </div>
+
+  <ul class="nav wizard-steps" id="userTabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" id="id-tab" data-bs-toggle="tab" data-bs-target="#tab-id" type="button" role="tab"><span class="step-badge">1</span> Identidad Laboral</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="account-tab" data-bs-toggle="tab" data-bs-target="#tab-account" type="button" role="tab"><span class="step-badge">2</span> Configuración de Cuenta</button></li>
+  </ul>
+
+  <form method="post" novalidate id="userIntegralForm">
+    {% csrf_token %}
+    <div class="wizard-body">
+
+      {% if persona_form.errors or usuario_form.errors %}
+      <div class="error-banner">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div><strong>Revise los campos:</strong> Hay errores en el formulario. Navegue entre las pestañas para corregirlos.</div>
+      </div>
+      {% endif %}
+
+      <div class="tab-content">
+        <!-- Tab 1: Identidad -->
+        <div class="tab-pane fade show active" id="tab-id">
+          <div class="section-divider"><i class="bi bi-person"></i> Datos Personales</div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label>Primer Nombre <span class="text-danger">*</span></label>
+              {{ persona_form.primer_nombre }}
+              {% if persona_form.primer_nombre.errors %}<div class="text-danger small mt-1">{{ persona_form.primer_nombre.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Apellido <span class="text-danger">*</span></label>
+              {{ persona_form.apellido }}
+              {% if persona_form.apellido.errors %}<div class="text-danger small mt-1">{{ persona_form.apellido.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-2">
+              <label>Tipo Doc.</label>
+              {{ persona_form.id_tipo_documento }}
+              {% if persona_form.id_tipo_documento.errors %}<div class="text-danger small mt-1">{{ persona_form.id_tipo_documento.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>N° de Documento <span class="text-danger">*</span></label>
+              {{ persona_form.numero_documento }}
+              {% if persona_form.numero_documento.errors %}<div class="text-danger small mt-1">{{ persona_form.numero_documento.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+              <label>Sexo</label>
+              {{ persona_form.sexo }}
+              {% if persona_form.sexo.errors %}<div class="text-danger small mt-1">{{ persona_form.sexo.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+              <label>Nacimiento</label>
+              {{ persona_form.fecha_nacimiento }}
+              {% if persona_form.fecha_nacimiento.errors %}<div class="text-danger small mt-1">{{ persona_form.fecha_nacimiento.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label>Pertenencia Étnica</label>
+              {{ persona_form.id_etnia }}
+              {% if persona_form.id_etnia.errors %}<div class="text-danger small mt-1">{{ persona_form.id_etnia.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+          
+          <div class="wizard-nav" style="justify-content:flex-end;">
+            <button type="button" class="btn-wizard-next" style="background: #334155; box-shadow: 0 2px 8px rgba(51,65,85,0.2);" onclick="switchTab('tab-account')">
+              Siguiente <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab 2: Cuenta -->
+        <div class="tab-pane fade" id="tab-account">
+          <div class="info-banner" style="background: #f8fafc; border-color: #e2e8f0; border-left-color: #475569; color: #334155;">
+            <i class="bi bi-info-circle-fill" style="color: #475569;"></i>
+            <div><strong>Credenciales de acceso:</strong> El usuario podrá ingresar al sistema con estos datos. Asegúrese de comunicarlos de forma segura.</div>
+          </div>
+          
+          <div class="section-divider"><i class="bi bi-key"></i> Acceso al Sistema</div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label>Nombre de Usuario <span class="text-danger">*</span></label>
+              {{ usuario_form.username }}
+              {% if usuario_form.username.errors %}<div class="text-danger small mt-1">{{ usuario_form.username.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Correo Electrónico</label>
+              {{ usuario_form.email }}
+              {% if usuario_form.email.errors %}<div class="text-danger small mt-1">{{ usuario_form.email.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label>Rol del Usuario <span class="text-danger">*</span></label>
+              {{ usuario_form.rol }}
+              <div class="form-text small text-muted mt-1">Determina los módulos visibles para este usuario.</div>
+              {% if usuario_form.rol.errors %}<div class="text-danger small mt-1">{{ usuario_form.rol.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Teléfono Corporativo</label>
+              {{ usuario_form.telefono }}
+              {% if usuario_form.telefono.errors %}<div class="text-danger small mt-1">{{ usuario_form.telefono.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label>Contraseña <span class="text-danger">*</span></label>
+              {{ usuario_form.password1 }}
+              {% if usuario_form.password1.errors %}<div class="text-danger small mt-1">{{ usuario_form.password1.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Confirmar Contraseña <span class="text-danger">*</span></label>
+              {{ usuario_form.password2 }}
+              {% if usuario_form.password2.errors %}<div class="text-danger small mt-1">{{ usuario_form.password2.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+          
+          <div class="wizard-nav">
+            <button type="button" class="btn-wizard-prev" onclick="switchTab('tab-id')"><i class="bi bi-arrow-left"></i> Anterior</button>
+            <button type="submit" class="btn-wizard-submit" style="background: linear-gradient(135deg, #1e293b, #334155);"><i class="bi bi-shield-check"></i> Finalizar y Crear Cuenta</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+function switchTab(id) {
+  const triggerEl = document.querySelector(`button[data-bs-target="#${id}"]`);
+  if(triggerEl) {
+    new bootstrap.Tab(triggerEl).show();
+    document.querySelector('.wizard-card').scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const invalidFields = document.querySelectorAll('.is-invalid, .text-danger.small');
+  if (invalidFields.length > 0) {
+    const errTab = invalidFields[0].closest('.tab-pane');
+    if (errTab) switchTab(errTab.id);
+  }
+});
+</script>
+{% endblock %}

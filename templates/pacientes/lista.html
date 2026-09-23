@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Pacientes{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <form class="d-flex gap-2" method="get" style="flex:1;max-width:400px;">
+    <div class="input-group">
+      <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+      <input type="text" name="q" value="{{ q }}" class="form-control border-start-0"
+        placeholder="Buscar por nombre o cédula…">
+    </div>
+    <button type="submit" class="btn btn-primary px-3">Buscar</button>
+    {% if q %}<a href="{% url 'pacientes:lista' %}" class="btn btn-outline-secondary">Limpiar</a>{% endif %}
+  </form>
+  {% if user.rol in 'ADMINISTRADOR,SECRETARIA' or user.is_superuser %}
+  <a href="{% url 'pacientes:crear' %}" class="btn btn-primary ms-2">
+    <i class="bi bi-person-plus me-1"></i> Nuevo Paciente
+  </a>
+  {% endif %}
+</div>
+
+<div class="table-card">
+  <div class="card-header">
+    <i class="bi bi-people me-2 text-primary"></i>
+    Pacientes registrados <span class="badge bg-primary ms-1">{{ pacientes.count }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Nombre Completo</th>
+          <th>Documento</th>
+          <th>Fecha Nacimiento</th>
+          <th>Sexo</th>
+          <th>Tipo Sangre</th>
+          <th>Teléfono</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pacientes %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="user-avatar" style="width:32px;height:32px;font-size:0.78rem;">
+                {{ p.id_nombre.nombre|first|upper }}
+              </div>
+              <span class="fw-500">{{ p }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="text-muted" style="font-size:0.8rem;">{{ p.id_tipo_documento.codigo|default:"" }}</span>
+            {{ p.numero_documento }}
+          </td>
+          <td>{{ p.fecha_nacimiento|date:"d/m/Y" }}</td>
+          <td>
+            <span
+              class="badge {% if p.sexo == 'MASCULINO' %}bg-primary{% else %}bg-pink{% endif %} bg-opacity-10 text-primary"
+              style="font-size:0.72rem;">
+              <i class="bi bi-{% if p.sexo == 'MASCULINO' %}gender-male{% else %}gender-female{% endif %}"></i>
+              {{ p.get_sexo_display }}
+            </span>
+          </td>
+          <td>
+            {% if p.id_tipo_sangre %}
+            <span class="badge bg-danger bg-opacity-15 text-white">{{ p.id_tipo_sangre.codigo }}</span>
+            {% else %}-{% endif %}
+          </td>
+          <td class="text-muted">{{ p.telefono|default:"-" }}</td>
+          <td class="text-end">
+            <a href="{% url 'pacientes:detalle' p.pk %}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye"></i>
+            </a>
+            {% if user.rol in 'ADMINISTRADOR,SECRETARIA' or user.is_superuser %}
+            <a href="{% url 'pacientes:editar' p.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i>
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-5">
+            <i class="bi bi-person-x fs-2 d-block mb-2"></i>
+            {% if q %}No se encontraron pacientes para "{{ q }}"{% else %}No hay pacientes registrados{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

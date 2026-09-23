@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% url 'citas:detalle' cita.pk %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <div>
+    <h4 class="mb-0">{{ page_title }}</h4>
+    <small class="text-muted">Cita #{{ cita.pk }} · {{ cita.id_persona }} · {{ cita.fecha_cita|date:"d/m/Y H:i" }}</small>
+  </div>
+</div>
+<div class="form-card" style="max-width:900px;">
+  <form method="post" novalidate>{% csrf_token %}
+    <h6 class="text-uppercase text-muted mb-3" style="font-size:0.75rem;letter-spacing:0.08em;">Antecedentes</h6>
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <label>Familiares</label>
+        <div class="input-group">
+          <input type="text" list="dl-familiar" id="input-familiar" class="form-control" placeholder="Buscar...">
+          <datalist id="dl-familiar">
+            {% for a in antecedentes_familiares_db %}<option data-id="{{ a.pk }}" value="{{ a.nombre }}"></option>{% endfor %}
+          </datalist>
+          <button type="button" class="btn btn-outline-primary btn-add-ant" data-cat="FAMILIAR" title="Añadir a paciente"><i class="bi bi-plus"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-new-ant" data-cat="FAMILIAR" title="Registrar nuevo en BD"><i class="bi bi-pencil"></i></button>
+        </div>
+        <ul id="list-familiar" class="list-group mt-2" style="font-size:0.875rem;"></ul>
+      </div>
+      <div class="col-md-4">
+        <label>Personales</label>
+        <div class="input-group">
+          <input type="text" list="dl-personal" id="input-personal" class="form-control" placeholder="Buscar...">
+          <datalist id="dl-personal">
+            {% for a in antecedentes_personales_db %}<option data-id="{{ a.pk }}" value="{{ a.nombre }}"></option>{% endfor %}
+          </datalist>
+          <button type="button" class="btn btn-outline-primary btn-add-ant" data-cat="PERSONAL" title="Añadir a paciente"><i class="bi bi-plus"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-new-ant" data-cat="PERSONAL" title="Registrar nuevo en BD"><i class="bi bi-pencil"></i></button>
+        </div>
+        <ul id="list-personal" class="list-group mt-2" style="font-size:0.875rem;"></ul>
+      </div>
+      <div class="col-md-4">
+        <label>Quirúrgicos</label>
+        <div class="input-group">
+          <input type="text" list="dl-quirurgico" id="input-quirurgico" class="form-control" placeholder="Buscar...">
+          <datalist id="dl-quirurgico">
+            {% for a in antecedentes_quirurgicos_db %}<option data-id="{{ a.pk }}" value="{{ a.nombre }}"></option>{% endfor %}
+          </datalist>
+          <button type="button" class="btn btn-outline-primary btn-add-ant" data-cat="QUIRURGICO" title="Añadir a paciente"><i class="bi bi-plus"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-new-ant" data-cat="QUIRURGICO" title="Registrar nuevo en BD"><i class="bi bi-pencil"></i></button>
+        </div>
+        <ul id="list-quirurgico" class="list-group mt-2" style="font-size:0.875rem;"></ul>
+      </div>
+    </div>
+    <h6 class="text-uppercase text-muted mb-3" style="font-size:0.75rem;letter-spacing:0.08em;">Síntomas y Signos Vitales</h6>
+    <div class="row g-3">
+      <div class="col-12">
+      <div class="col-md-6">
+        <label>Síntomas Principales <span class="text-danger">*</span></label>
+        <div class="input-group">
+          <input type="text" list="dl-sintomas-prin" id="input-sintomas-prin" class="form-control" placeholder="Buscar síntoma principal...">
+          <datalist id="dl-sintomas-prin">
+            {% for s in sintomas_db %}<option data-id="{{ s.pk }}" value="{{ s.nombre }}"></option>{% endfor %}
+          </datalist>
+          <button type="button" class="btn btn-outline-primary btn-add-sint" data-type="prin" title="Añadir a consulta"><i class="bi bi-plus"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-new-sint" title="Registrar nuevo en BD"><i class="bi bi-pencil"></i></button>
+        </div>
+        <ul id="list-sintomas-prin" class="list-group mt-2" style="font-size:0.875rem;"></ul>
+      </div>
+      <div class="col-md-6">
+        <label>Síntomas Secundarios</label>
+        <div class="input-group">
+          <input type="text" list="dl-sintomas-sec" id="input-sintomas-sec" class="form-control" placeholder="Buscar síntoma secundario...">
+          <datalist id="dl-sintomas-sec">
+            {% for s in sintomas_db %}<option data-id="{{ s.pk }}" value="{{ s.nombre }}"></option>{% endfor %}
+          </datalist>
+          <button type="button" class="btn btn-outline-primary btn-add-sint" data-type="sec" title="Añadir a consulta"><i class="bi bi-plus"></i></button>
+          <button type="button" class="btn btn-outline-secondary btn-new-sint" title="Registrar nuevo en BD"><i class="bi bi-pencil"></i></button>
+        </div>
+        <ul id="list-sintomas-sec" class="list-group mt-2" style="font-size:0.875rem;"></ul>
+      </div>
+      </div>
+
+      <div class="col-md-3">
+        <label>{{ form.presion_arterial.label }}</label>
+        {{ form.presion_arterial }}
+      </div>
+      <div class="col-md-3">
+        <label>{{ form.frecuencia_cardiaca.label }}</label>
+        {{ form.frecuencia_cardiaca }}
+      </div>
+      <div class="col-md-3">
+        <label>{{ form.temperatura.label }}</label>
+        {{ form.temperatura }}
+      </div>
+      <div class="col-md-3">
+        <label>{{ form.saturacion_oxigeno.label }}</label>
+        {{ form.saturacion_oxigeno }}
+      </div>
+      <div class="col-md-3">
+        <label>{{ form.peso.label }}</label>
+        {{ form.peso }}
+      </div>
+      <div class="col-md-3">
+        <label>{{ form.talla.label }}</label>
+        {{ form.talla }}
+      </div>
+      <div class="col-md-3">
+        <label>{{ form.duracion_minutos.label }}</label>
+        {{ form.duracion_minutos }}
+      </div>
+      <div class="col-md-3">
+        <label>{{ form.proxima_cita.label }}</label>
+        {{ form.proxima_cita }}
+      </div>
+    </div>
+    <hr>
+    <h6 class="text-uppercase text-muted mb-3" style="font-size:0.75rem;letter-spacing:0.08em;">Exploración y Tratamiento</h6>
+    <div class="row g-3">
+      <div class="col-12">
+        <label>{{ form.examen_fisico.label }}</label>
+        {{ form.examen_fisico }}
+      </div>
+      <div class="col-12">
+        <label>{{ form.tratamiento_prescrito.label }}</label>
+        {{ form.tratamiento_prescrito }}
+      </div>
+      <div class="col-12">
+        <label>{{ form.recomendaciones.label }}</label>
+        {{ form.recomendaciones }}
+      </div>
+      <div class="col-md-4">
+        <label>{{ form.estado.label }}</label>
+        {{ form.estado }}
+      </div>
+    </div>
+    <div class="d-flex gap-2 mt-4">
+      <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-1"></i>{{ action }}</button>
+      <a href="{% url 'citas:detalle' cita.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<!-- Modal de Registro Rápido -->
+<div class="modal fade" id="modalRegistroRapido" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalRegistroRapidoTitle">Registrar Nuevo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="nuevoNombre" class="form-label text-muted small text-uppercase">Nombre</label>
+          <input type="text" class="form-control form-control-lg" id="nuevoNombre" placeholder="Escriba aquí..." autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary px-4" id="btnGuardarRapido">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function getOptionId(datalistId, value) {
+        const options = document.querySelectorAll(`#${datalistId} option`);
+        for (let opt of options) {
+            if (opt.value === value) return opt.getAttribute('data-id');
+        }
+        return null;
+    }
+
+    function addToList(inputId, datalistId, listId, inputName) {
+        const input = document.getElementById(inputId);
+        const val = input.value.trim();
+        if (!val) return;
+        const id = getOptionId(datalistId, val);
+        if (!id) {
+            alert('El elemento no existe en la base de datos. Por favor, utilice el botón "Registrar nuevo en BD" primero.');
+            return;
+        }
+        
+        // Evitar duplicados visuales
+        const list = document.getElementById(listId);
+        if (list.querySelector(`input[value="${id}"]`)) {
+            alert('Ya ha sido añadido.');
+            input.value = '';
+            return;
+        }
+
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center py-1';
+        li.innerHTML = `
+            ${val}
+            <input type="hidden" name="${inputName}[]" value="${id}">
+            <button type="button" class="btn btn-link text-danger p-0" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i></button>
+        `;
+        list.appendChild(li);
+        input.value = '';
+    }
+
+    // Eventos para Síntomas
+    document.querySelectorAll('.btn-add-sint').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            addToList(`input-sintomas-${type}`, `dl-sintomas-${type}`, `list-sintomas-${type}`, `sintomas_${type}_list`);
+        });
+    });
+
+    // Modal Logic
+    const modalRegistro = new bootstrap.Modal(document.getElementById('modalRegistroRapido'));
+    const modalTitle = document.getElementById('modalRegistroRapidoTitle');
+    const inputNuevoNombre = document.getElementById('nuevoNombre');
+    const btnGuardarRapido = document.getElementById('btnGuardarRapido');
+    let contextRegistro = null;
+
+    document.querySelectorAll('.btn-new-sint').forEach(btn => {
+        btn.addEventListener('click', () => {
+            contextRegistro = { tipo: 'sintoma' };
+            modalTitle.textContent = 'Registrar Nuevo Síntoma';
+            inputNuevoNombre.value = '';
+            modalRegistro.show();
+        });
+    });
+
+    document.querySelectorAll('.btn-new-ant').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const cat = this.getAttribute('data-cat');
+            contextRegistro = { tipo: 'antecedente', categoria: cat };
+            modalTitle.textContent = `Registrar Nuevo Antecedente (${cat.toLowerCase()})`;
+            inputNuevoNombre.value = '';
+            modalRegistro.show();
+        });
+    });
+
+    btnGuardarRapido.addEventListener('click', function() {
+        const nombre = inputNuevoNombre.value.trim();
+        if (!nombre) {
+            alert('El nombre es requerido.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('nombre', nombre);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        let url = '';
+        if (contextRegistro.tipo === 'sintoma') {
+            url = "{% url 'consultas:crear_sintoma_ajax' %}";
+        } else {
+            url = "{% url 'consultas:crear_antecedente_ajax' %}";
+            formData.append('categoria', contextRegistro.categoria);
+        }
+
+        const originalBtnText = this.innerHTML;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+        this.disabled = true;
+
+        fetch(url, { method: 'POST', body: formData })
+        .then(r => r.json()).then(data => {
+            if (data.success) {
+                if (contextRegistro.tipo === 'sintoma') {
+                    // Update both datalists
+                    ['prin', 'sec'].forEach(type => {
+                        const dl = document.getElementById(`dl-sintomas-${type}`);
+                        dl.insertAdjacentHTML('beforeend', `<option data-id="${data.id}" value="${data.nombre}"></option>`);
+                    });
+                    alert('Síntoma registrado. Búscalo en la lista para añadirlo.');
+                } else {
+                    const catLower = contextRegistro.categoria.toLowerCase();
+                    const dl = document.getElementById(`dl-${catLower}`);
+                    dl.insertAdjacentHTML('beforeend', `<option data-id="${data.id}" value="${data.nombre}"></option>`);
+                    document.getElementById(`input-${catLower}`).value = data.nombre;
+                }
+                modalRegistro.hide();
+            } else {
+                alert('Error al registrar en la base de datos.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error de conexión.');
+        })
+        .finally(() => {
+            this.innerHTML = originalBtnText;
+            this.disabled = false;
+        });
+    });
+
+    // Eventos para Antecedentes (Añadir a vista)
+    document.querySelectorAll('.btn-add-ant').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const cat = this.getAttribute('data-cat');
+            const catLower = cat.toLowerCase();
+            addToList(`input-${catLower}`, `dl-${catLower}`, `list-${catLower}`, `antecedentes_${catLower}_list`);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Sistema Médico{% endblock %}</title>
+  <meta name="description" content="Sistema de Historial Médico y Gestión de Citas">
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap-icons.min.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}?v={% now 'U' %}">
+  <link rel="stylesheet" href="{% static 'sweetalert2/sweetalert2.min.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand d-flex align-items-center gap-2">
+      <div class="brand-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+      <div>
+        <div class="brand-name">CPT3. CONCEPCION MARIÑO</div>
+        <div class="brand-sub">Historial Médico</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">Principal</div>
+      <div class="sidebar-item">
+        <a href="{% url 'dashboard' %}"
+          class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+          <i class="bi bi-grid-1x2"></i> Inicio
+        </a>
+      </div>
+
+      {% if user.rol == 'ADMINISTRADOR' or user.rol == 'ANALISTA' or user.is_superuser %}
+      <div class="sidebar-item">
+        <a href="{% url 'core:estadisticas' %}" class="{% if 'estadisticas' in request.path %}active{% endif %}">
+          <i class="bi bi-graph-up-arrow"></i> Estadísticas
+        </a>
+      </div>
+      {% endif %}
+
+      {% if user.rol == 'ADMINISTRADOR' or user.rol == 'SECRETARIA' or user.rol == 'ANALISTA' or user.is_superuser %}
+      <div class="sidebar-section-title mt-2">Atención y Citas</div>
+      <div class="sidebar-item">
+        <a href="{% url 'citas:lista' %}" class="{% if 'citas' in request.path %}active{% endif %}">
+          <i class="bi bi-calendar-check"></i> Gestión de Citas
+        </a>
+      </div>
+      {% endif %}
+
+      {% if user.rol == 'ADMINISTRADOR' or user.rol == 'SECRETARIA' or user.is_superuser %}
+      <div class="sidebar-section-title mt-2">Pacientes</div>
+      <div class="sidebar-item">
+        <a href="{% url 'pacientes:lista' %}"
+          class="{% if 'pacientes' in request.path and 'registro-unificado' not in request.path %}active{% endif %}">
+          <i class="bi bi-person-lines-fill"></i> Lista de Pacientes
+        </a>
+      </div>
+      <div class="sidebar-item">
+        <a href="{% url 'pacientes:crear' %}" class="{% if '/nuevo/' in request.path %}active{% endif %}">
+          <i class="bi bi-plus-circle"></i> Registar Paciente
+        </a>
+      </div>
+      {% endif %}
+
+      {% if user.rol == 'ADMINISTRADOR' or user.rol == 'MEDICO' or user.is_superuser %}
+      <div class="sidebar-section-title mt-2">Historia Clínica</div>
+      <div class="sidebar-item">
+        <a href="{% url 'consultas:lista' %}" class="{% if 'consultas' in request.path %}active{% endif %}">
+          <i class="bi bi-file-medical"></i> Consultas Médicas
+        </a>
+      </div>
+      {% endif %}
+
+      {% if user.rol == 'ADMINISTRADOR' or user.is_superuser %}
+      <div class="sidebar-section-title mt-2">Personal y Médicos</div>
+      <div class="sidebar-item">
+        <a href="{% url 'medicos:lista' %}"
+          class="{% if 'medicos' in request.path and 'especialidades' not in request.path and 'crear-integral' not in request.path %}active{% endif %}">
+          <i class="bi bi-bag-plus"></i> Lista de Médicos
+        </a>
+      </div>
+      <div class="sidebar-item">
+        <a href="{% url 'medicos:crear_integral' %}" class="{% if 'crear-integral' in request.path %}active{% endif %}">
+          <i class="bi bi-person-plus"></i> Registro Integral Médico
+        </a>
+      </div>
+      <div class="sidebar-item">
+        <a href="{% url 'medicos:lista_especialidades' %}"
+          class="{% if 'especialidades' in request.path %}active{% endif %}">
+          <i class="bi bi-mortarboard"></i> Especialidades Médicas
+        </a>
+      </div>
+      {% endif %}
+
+      {% if user.rol == 'ADMINISTRADOR' or user.is_superuser %}
+      <div class="sidebar-section-title mt-2">Configuración</div>
+      <div class="sidebar-item">
+        <a href="{% url 'usuarios:lista' %}"
+          class="{% if 'usuarios' in request.path and 'crear-integral' not in request.path %}active{% endif %}">
+          <i class="bi bi-people"></i> Gestión de Usuarios
+        </a>
+      </div>
+
+      <div class="sidebar-item">
+        <a href="/admin/">
+          <i class="bi bi-gear"></i> Panel Django Admin
+        </a>
+      </div>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">{{ user.first_name|first|upper|default:user.username|first|upper }}</div>
+        <div>
+          <div style="color:#fff;font-weight:500;font-size:0.8rem;">{{ user.get_full_name|default:user.username }}</div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);">{{ user.get_rol_display }}</div>
+        </div>
+      </div>
+      <a href="{% url 'logout' %}" class="btn btn-sm mt-2 w-100"
+        style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);border:none;">
+        <i class="bi bi-box-arrow-left"></i> Cerrar Sesión
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-light btn-sm d-md-none"
+          onclick="document.getElementById('sidebar').classList.toggle('open')">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+        <h1 class="top-bar-title mb-0">{{ page_title|default:"Sistema Médico" }}</h1>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-light text-dark border">
+          <i class="bi bi-clock me-1"></i>
+          <span id="clock"></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Messages are handled by SweetAlert2 via JS at the bottom -->
+
+    <!-- Content -->
+    <div class="content-area">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'sweetalert2/sweetalert2.min.js' %}"></script>
+  <script>
+    // Live clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // SweetAlert2 Toast configuration for Django messages
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    });
+
+    {% if messages %}
+    {% for message in messages %}
+    Toast.fire({
+      icon: '{% if message.tags == "error" or message.tags == "danger" %}error{% elif message.tags == "success" %}success{% elif message.tags == "warning" %}warning{% else %}info{% endif %}',
+      title: '{{ message|escapejs }}'
+    });
+    {% endfor %}
+    {% endif %}
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

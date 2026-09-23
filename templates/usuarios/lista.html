@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% block title %}Usuarios del Sistema{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-700"><i class="bi bi-people me-2 text-primary"></i>Usuarios del Sistema</h4>
+  <a href="{% url 'usuarios:crear_integral' %}" class="btn btn-primary">
+    <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
+  </a>
+</div>
+
+<div class="card border-0 shadow-sm" style="border-radius:16px;overflow:hidden;">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr style="background:#f8fafc;">
+          <th class="ps-4 py-3 text-muted fw-600"
+            style="font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;">Usuario</th>
+          <th class="py-3 text-muted fw-600" style="font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;">
+            Nombre Completo</th>
+          <th class="py-3 text-muted fw-600" style="font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;">Rol
+          </th>
+          <th class="py-3 text-muted fw-600" style="font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;">
+            Correo</th>
+          <th class="py-3 text-muted fw-600" style="font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;">
+            Teléfono</th>
+          <th class="py-3 text-muted fw-600" style="font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;">
+            Estado</th>
+          <th class="py-3 text-muted fw-600 text-end pe-4"
+            style="font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr id="row-usuario-{{ u.pk }}">
+          <td class="ps-4">
+            <div class="d-flex align-items-center gap-2">
+              {# Mini avatar #}
+              <div class="d-flex align-items-center justify-content-center fw-700 text-white rounded-circle"
+                style="width:34px;height:34px;font-size:.8rem;flex-shrink:0;
+                  background:{% if u.rol == 'ADMINISTRADOR' %}linear-gradient(135deg,#dc2626,#e97316){% elif u.rol == 'MEDICO' %}linear-gradient(135deg,#059669,#0d9488){% elif u.rol == 'SECRETARIA' %}linear-gradient(135deg,#1a6db0,#2563eb){% else %}linear-gradient(135deg,#7c3aed,#9333ea){% endif %};">
+                {{ u.first_name|first|upper|default:u.username|first|upper }}
+              </div>
+              <code class="text-dark fw-600" style="font-size:.85rem;">{{ u.username }}</code>
+            </div>
+          </td>
+          <td>
+            <div class="fw-600 text-dark">{{ u.get_full_name|default:"—" }}</div>
+          </td>
+          <td>
+            <span
+              class="badge rounded-pill px-3 py-1
+              {% if u.rol == 'ADMINISTRADOR' %}bg-danger{% elif u.rol == 'MEDICO' %}bg-success{% elif u.rol == 'SECRETARIA' %}bg-primary{% else %}bg-secondary{% endif %}"
+              style="font-size:.75rem;">
+              {{ u.get_rol_display }}
+            </span>
+          </td>
+          <td class="text-muted small">{{ u.email|default:"—" }}</td>
+          <td class="text-muted small">{{ u.telefono|default:"—" }}</td>
+          <td>
+            <div id="badge-usuario-{{ u.pk }}">
+              {% if u.activo %}
+              <span
+                class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25 rounded-pill px-3"
+                style="font-size:.75rem;">
+                <i class="bi bi-circle-fill me-1" style="font-size:.45rem;"></i>Activo
+              </span>
+              {% else %}
+              <span
+                class="badge bg-secondary bg-opacity-15 border border-secondary border-opacity-25 rounded-pill px-3 text-white"
+                style="font-size:.75rem;">
+                <i class="bi bi-circle me-1" style="font-size:.45rem;"></i>Inactivo
+              </span>
+              {% endif %}
+            </div>
+          </td>
+          <td class="text-end pe-4">
+            <div class="btn-group">
+              <a href="{% url 'usuarios:detalle' u.pk %}" class="btn btn-sm btn-light" title="Ver perfil">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="{% url 'usuarios:editar' u.pk %}" class="btn btn-sm btn-light" title="Editar">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a href="{% url 'usuarios:cambiar_password' u.pk %}" class="btn btn-sm btn-light"
+                title="Cambiar contraseña">
+                <i class="bi bi-key"></i>
+              </a>
+              {% if request.user.pk != u.pk %}
+              <button type="button"
+                class="btn btn-sm {% if u.activo %}btn-outline-danger{% else %}btn-outline-success{% endif %} btn-toggle-usuario"
+                id="btn-toggle-{{ u.pk }}" data-pk="{{ u.pk }}" data-username="{{ u.username }}"
+                data-activo="{% if u.activo %}SI{% else %}NO{% endif %}"
+                title="{% if u.activo %}Desactivar{% else %}Activar{% endif %}" data-bs-toggle="modal"
+                data-bs-target="#modalToggleUsuario">
+                <i class="bi {% if u.activo %}bi-person-dash{% else %}bi-person-check{% endif %}"></i>
+              </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-5 text-muted">
+            <i class="bi bi-people fs-1 d-block mb-2 opacity-25"></i>
+            No hay usuarios registrados.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{# ── Modal de confirmación toggle ── #}
+<div class="modal fade" id="modalToggleUsuario" tabindex="-1" aria-labelledby="modalToggleUserLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+      <div class="modal-header border-0 px-4 pt-4 pb-2" id="modalToggleUserHeader">
+        <div class="d-flex align-items-center gap-3">
+          <div id="modalToggleUserIcon"
+            style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">
+          </div>
+          <div>
+            <h5 class="modal-title fw-700 mb-0" id="modalToggleUserLabel">Confirmar acción</h5>
+            <p class="text-muted small mb-0" id="modalToggleUserSubtitle"></p>
+          </div>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body px-4 py-3">
+        <div id="modalToggleUserBody" class="rounded-3 p-3 mb-0" style="font-size:.9rem;"></div>
+      </div>
+
+      <div class="modal-footer border-0 px-4 pb-4 pt-1 gap-2">
+        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn px-4 fw-600" id="btnConfirmUserToggle">
+          <span id="btnConfirmUserText"></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    function getCsrf() {
+      return document.cookie.split(';')
+        .map(c => c.trim())
+        .find(c => c.startsWith('csrftoken='))
+        ?.split('=')[1] || '';
+    }
+
+    let pendingUserPk = null;
+    let pendingUserActivo = null;
+
+    document.querySelectorAll('.btn-toggle-usuario').forEach(btn => {
+      btn.addEventListener('click', function () {
+        pendingUserPk = this.dataset.pk;
+        pendingUserActivo = this.dataset.activo;
+        const username = this.dataset.username;
+        const desactivar = pendingUserActivo === 'SI';
+
+        const icon = document.getElementById('modalToggleUserIcon');
+        const subtitle = document.getElementById('modalToggleUserSubtitle');
+        const body = document.getElementById('modalToggleUserBody');
+        const btnOk = document.getElementById('btnConfirmUserToggle');
+        const btnTxt = document.getElementById('btnConfirmUserText');
+
+        if (desactivar) {
+          icon.style.background = '#fee2e2';
+          icon.innerHTML = '<i class="bi bi-person-dash text-danger"></i>';
+          subtitle.textContent = 'Desactivar usuario';
+          body.style.background = '#fff7f7';
+          body.innerHTML = `
+          <p class="mb-1">¿Deseas <strong>desactivar</strong> al usuario:</p>
+          <p class="fw-700 text-danger mb-2">@`+ escHtml(username) + `</p>
+          <p class="text-muted small mb-0">
+            <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+            No podrá iniciar sesión en el sistema.
+          </p>`;
+          btnOk.className = 'btn btn-danger px-4 fw-600';
+          btnTxt.textContent = 'Sí, desactivar';
+        } else {
+          icon.style.background = '#d1fae5';
+          icon.innerHTML = '<i class="bi bi-person-check text-success"></i>';
+          subtitle.textContent = 'Activar usuario';
+          body.style.background = '#f0fdf4';
+          body.innerHTML = `
+          <p class="mb-1">¿Deseas <strong>activar</strong> al usuario:</p>
+          <p class="fw-700 text-success mb-2">@`+ escHtml(username) + `</p>
+          <p class="text-muted small mb-0">
+            <i class="bi bi-check-circle me-1 text-success"></i>
+            Podrá volver a iniciar sesión correctamente.
+          </p>`;
+          btnOk.className = 'btn btn-success px-4 fw-600';
+          btnTxt.textContent = 'Sí, activar';
+        }
+      });
+    });
+
+    document.getElementById('btnConfirmUserToggle').addEventListener('click', async function () {
+      if (!pendingUserPk) return;
+
+      const btn = this;
+      btn.disabled = true;
+
+      // Maintain the span so we don't lose the ID reference
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span><span id="btnConfirmUserText">Guardando...</span>';
+
+      try {
+        const resp = await fetch(`/usuarios/${pendingUserPk}/toggle/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCsrf(),
+            'X-Requested-With': 'XMLHttpRequest',
+          }
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.ok) throw new Error(data.error || 'Error');
+
+        const nuevoActivo = data.activo;
+        const badgeWrap = document.getElementById(`badge-usuario-${pendingUserPk}`);
+        const toggleBtn = document.getElementById(`btn-toggle-${pendingUserPk}`);
+        const icon = toggleBtn.querySelector('i');
+
+        if (nuevoActivo) {
+          badgeWrap.innerHTML = `<span class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-25 rounded-pill px-3" style="font-size:.75rem;">
+                <i class="bi bi-circle-fill me-1" style="font-size:.45rem;"></i>Activo
+              </span>`;
+          toggleBtn.className = 'btn btn-sm btn-outline-danger btn-toggle-usuario';
+          toggleBtn.title = 'Desactivar';
+          icon.className = 'bi bi-person-dash';
+          toggleBtn.dataset.activo = 'SI';
+        } else {
+          badgeWrap.innerHTML = `<span class="badge bg-secondary bg-opacity-15 text-white border border-secondary border-opacity-25 rounded-pill px-3" style="font-size:.75rem;">
+                <i class="bi bi-circle me-1" style="font-size:.45rem;"></i>Inactivo
+              </span>`;
+          toggleBtn.className = 'btn btn-sm btn-outline-success btn-toggle-usuario';
+          toggleBtn.title = 'Activar';
+          icon.className = 'bi bi-person-check';
+          toggleBtn.dataset.activo = 'NO';
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('modalToggleUsuario')).hide();
+
+      } catch (e) {
+        alert(e.message || 'Error al cambiar el estado. Inténtalo de nuevo.');
+      } finally {
+        btn.disabled = false;
+        // Re-query the span because innerHTML replaced it
+        const txtSpan = document.getElementById('btnConfirmUserText');
+        if (txtSpan) {
+          txtSpan.textContent = pendingUserActivo === 'SI' ? 'Sí, desactivar' : 'Sí, activar';
+        }
+
+        // Clean up any remaining spinner
+        const spinner = btn.querySelector('.spinner-border');
+        if (spinner) spinner.remove();
+      }
+    });
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.appendChild(document.createTextNode(String(s)));
+      return d.innerHTML;
+    }
+  })();
+</script>
+{% endblock %}

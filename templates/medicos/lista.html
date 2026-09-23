@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Médicos{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Médicos Registrados</h5>
+  {% if user.rol == 'ADMINISTRADOR' or user.is_superuser %}
+  <a href="{% url 'medicos:crear_integral' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nuevo Médico</a>
+  {% endif %}
+</div>
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Médico</th><th>Registro</th><th>Especialidades</th><th>Estado</th><th>Contratación</th><th class="text-end">Acciones</th></tr></thead>
+      <tbody>
+        {% for m in medicos %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="user-avatar" style="width:32px;height:32px;font-size:0.78rem;background:linear-gradient(135deg,#065f46,#0d9488);">
+                {{ m.id_persona.id_nombre.nombre|first|upper }}
+              </div>
+              <span class="fw-500">{{ m }}</span>
+            </div>
+          </td>
+          <td class="text-muted">{{ m.numero_registro }}</td>
+          <td>
+            {% for esp in m.especialidades.all %}
+            <span class="badge bg-primary bg-opacity-10 text-primary me-1" style="font-size:0.72rem;">{{ esp.id_especialidad.nombre }}</span>
+            {% empty %}-{% endfor %}
+          </td>
+          <td>
+            <span class="badge {% if m.estado == 'ACTIVO' %}bg-success{% elif m.estado == 'INACTIVO' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+              {{ m.estado }}
+            </span>
+          </td>
+          <td>{{ m.fecha_contratacion|date:"d/m/Y"|default:"-" }}</td>
+          <td class="text-end">
+            <a href="{% url 'medicos:detalle' m.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+            {% if user.rol == 'ADMINISTRADOR' or user.is_superuser %}
+            <a href="{% url 'medicos:editar' m.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-5"><i class="bi bi-bag-x fs-2 d-block mb-2"></i>No hay médicos registrados.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

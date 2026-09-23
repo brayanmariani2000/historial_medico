@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stats-card {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    background: #fff;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .stats-card-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+  }
+  .stats-card-title {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .stats-card-body {
+    padding: 1.25rem;
+  }
+  .stats-table {
+    font-size: 0.875rem;
+  }
+  .stats-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.025em;
+  }
+  .progress-bar-small {
+    height: 6px;
+    border-radius: 3px;
+    background: #f1f5f9;
+  }
+  .chart-container-custom {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+  .chart-container-custom canvas {
+    cursor: pointer;
+  }
+  .btn-export-group .btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+  .kpi-mini {
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+    height: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .kpi-mini:hover { 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+  .kpi-mini-val { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem; pointer-events: none; }
+  .kpi-mini-label { font-size: 0.75rem; color: rgba(0,0,0,0.6); font-weight: 600; pointer-events: none; }
+  
+  .filter-bar {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .filter-bar input[type="date"] {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    color: #475569;
+  }
+  
+  @media print {
+    .no-print { display: none !important; }
+    .sidebar { display: none !important; }
+    .main-content { margin: 0 !important; width: 100% !important; }
+    .stats-card { box-shadow: none; border: 1px solid #ddd; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ======= HEADER ======= -->
+<div class="no-print mb-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+  <div>
+    <h3 class="fw-800 mb-1"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Analítica Médica</h3>
+    <p class="text-muted small mb-0">Monitoreo operativo y estadístico del sistema &nbsp;·&nbsp; <span id="last-updated"></span></p>
+  </div>
+  <div class="header-actions btn-export-group">
+    <a href="{% url 'core:exportar_estadisticas' %}?start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-outline-success">
+      <i class="bi bi-file-earmark-excel me-1"></i> Exportar a Excel
+    </a>
+    <button class="btn btn-outline-dark" onclick="window.print()">
+      <i class="bi bi-printer me-1"></i> Imprimir Reporte
+    </button>
+  </div>
+</div>
+
+<!-- ======= FILTER BAR ======= -->
+<div class="filter-bar no-print">
+  <div class="fw-600 text-secondary me-2"><i class="bi bi-funnel"></i> Filtros:</div>
+  <form method="get" class="d-flex align-items-center gap-3 flex-grow-1">
+    <div class="d-flex align-items-center gap-2">
+      <label class="small text-muted mb-0 fw-600">Desde:</label>
+      <input type="date" name="start_date" id="start_date" value="{{ start_date }}">
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <label class="small text-muted mb-0 fw-600">Hasta:</label>
+      <input type="date" name="end_date" id="end_date" value="{{ end_date }}">
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm px-3 ms-auto" style="border-radius: 8px;">
+      <i class="bi bi-search me-1"></i> Aplicar Filtros
+    </button>
+    {% if start_date or end_date %}
+    <a href="{% url 'core:estadisticas' %}" class="btn btn-light btn-sm text-danger" style="border-radius: 8px;">
+      Limpiar
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- ======= KPI STRIP ======= -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-mini" style="background: #eef2ff; color: #4338ca;" data-drilldown="true" data-type="kpi_pacientes" onclick="openDrilldown('sexo', 'MASCULINO')">
+      <!-- MASCULINO y FEMENINO por default para drilldown, mejor no poner click al general sin un modal general, o abrir tabla completa? -->
+      <!-- Let's just make the KPI non-clickable for now or map it to a specific view if needed. -->
+      <div class="kpi-mini-val" id="kpi-pacientes">{{ total_pacientes }}</div>
+      <div class="kpi-mini-label text-uppercase">Pacientes</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-mini" style="background: #f0fdf4; color: #15803d;">
+      <div class="kpi-mini-val" id="kpi-medicos">{{ total_medicos }}</div>
+      <div class="kpi-mini-label text-uppercase">Médicos</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-mini" style="background: #fffbeb; color: #b45309;">
+      <div class="kpi-mini-val" id="kpi-citas">{{ total_citas }}</div>
+      <div class="kpi-mini-label text-uppercase">Citas Registradas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-mini" style="background: #fdf2f8; color: #be185d;">
+      <div class="kpi-mini-val">{{ total_consultas|default:0 }}</div>
+      <div class="kpi-mini-label text-uppercase">Consultas Realizadas</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-mini" style="background: #f5f3ff; color: #6d28d9;">
+      <div class="kpi-mini-val">{{ alergias_count }}</div>
+      <div class="kpi-mini-label text-uppercase">Alergias Reg.</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-lg-2">
+    <div class="kpi-mini" style="background: #f8fafc; color: #475569;">
+      <div class="kpi-mini-val">{{ discapacidades_count }}</div>
+      <div class="kpi-mini-label text-uppercase">Esp. Salud</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= ANALYTICS GRID ======= -->
+
+<div class="row">
+  <!-- 1. Patologías Frecuentes -->
+  <div class="col-lg-12 mb-4">
+    <div class="stats-card">
+      <div class="stats-card-header">
+        <h5 class="stats-card-title"><i class="bi bi-clipboard2-pulse text-warning"></i> Patologías / Diagnósticos Frecuentes</h5>
+        <span class="badge bg-warning bg-opacity-10 text-warning px-3">Top 10 Diagnósticos (Clic para ver pacientes)</span>
+      </div>
+      <div class="stats-card-body">
+        <div class="row align-items-center">
+          <div class="col-md-5">
+            <div class="table-responsive">
+              <table class="table table-hover stats-table mb-0">
+                <thead><tr><th>Enfermedad / Diagnóstico</th><th class="text-end">Frecuencia</th></tr></thead>
+                <tbody id="table-diag"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-md-7">
+            <div class="chart-container-custom">
+              <canvas id="chart-diag"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Distribución por Edades -->
+  <div class="col-lg-6 mb-4">
+    <div class="stats-card h-100">
+      <div class="stats-card-header">
+        <h5 class="stats-card-title"><i class="bi bi-people text-primary"></i> Distribución por Edades</h5>
+        <span class="badge bg-light text-muted border">Rangos Etarios (Clic para detalle)</span>
+      </div>
+      <div class="stats-card-body">
+        <div class="row align-items-center">
+          <div class="col-sm-6">
+            <div class="table-responsive">
+              <table class="table table-sm stats-table mb-0">
+                <thead><tr><th>Rango</th><th class="text-end">Cant.</th></tr></thead>
+                <tbody id="table-age"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="chart-container-custom">
+              <canvas id="chart-age"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Distribución por Sexo -->
+  <div class="col-lg-6 mb-4">
+    <div class="stats-card h-100">
+      <div class="stats-card-header">
+        <h5 class="stats-card-title"><i class="bi bi-gender-ambiguous text-danger"></i> Distribución por Sexo</h5>
+        <span class="badge bg-light text-muted border">Género (Clic en gráfica)</span>
+      </div>
+      <div class="stats-card-body">
+        <div class="chart-container-custom">
+          <canvas id="chart-sexo"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Ubicación Geográfica -->
+  <div class="col-lg-7 mb-4">
+    <div class="stats-card h-100">
+      <div class="stats-card-header">
+        <h5 class="stats-card-title"><i class="bi bi-geo-alt text-info"></i> Distribución Geográfica</h5>
+        <span class="badge bg-light text-muted border">Top 8 Parroquias (Clic para detalle)</span>
+      </div>
+      <div class="stats-card-body">
+        <div class="chart-container-custom" style="height: 350px;">
+          <canvas id="chart-loc"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Especialidades -->
+  <div class="col-lg-5 mb-4">
+    <div class="stats-card h-100">
+      <div class="stats-card-header">
+        <h5 class="stats-card-title"><i class="bi bi-stethoscope text-success"></i> Citas por Especialidad</h5>
+        <span class="badge bg-light text-muted border">Clic para ver citas</span>
+      </div>
+      <div class="stats-card-body">
+        <div class="chart-container-custom" style="height: 350px;">
+          <canvas id="chart-espec"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Drill-down -->
+<div class="modal fade" id="drilldownModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0" id="drilldownModalContent">
+      <div class="modal-body text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="mt-3 text-muted">Cargando detalles...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- USO DE CHART.JS LOCAL -->
+<script src="{% static 'js/lib/chart.js' %}"></script>
+<script>
+  // Params de fecha para enviar al API de drilldown
+  const START_DATE = "{{ start_date }}";
+  const END_DATE = "{{ end_date }}";
+
+  function openDrilldown(type, value) {
+    const modal = new bootstrap.Modal(document.getElementById('drilldownModal'));
+    const content = document.getElementById('drilldownModalContent');
+    content.innerHTML = `
+      <div class="modal-body text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <div class="mt-3 text-muted">Cargando datos para: ${value}...</div>
+      </div>
+    `;
+    modal.show();
+
+    // Llama al API
+    const url = `{% url 'core:stats_drilldown' %}?type=${encodeURIComponent(type)}&value=${encodeURIComponent(value)}&start_date=${START_DATE}&end_date=${END_DATE}`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        content.innerHTML = data.html;
+      })
+      .catch(err => {
+        content.innerHTML = `<div class="modal-body text-danger py-4">Error al cargar datos.</div>`;
+      });
+  }
+
+  // Clic Handler Universal para Chart.js
+  function handleChartClick(evt, elements, chart, type) {
+    if (elements && elements.length > 0) {
+      const index = elements[0].index;
+      const label = chart.data.labels[index];
+      openDrilldown(type, label);
+    }
+  }
+
+  // --- Data Extraction from Django ---
+  const RAW_DATA = {
+    age:    { labels: {{ age_json|safe }},    data: {{ age_data_json|safe }} },
+    sexo:   { labels: {{ sexo_json|safe }},   data: {{ sexo_data_json|safe }} },
+    loc:    { labels: {{ loc_json|safe }},    data: {{ loc_data_json|safe }} },
+    diag:   { labels: {{ diag_json|safe }},   data: {{ diag_data_json|safe }} },
+    espec:  { labels: {{ espec_json|safe }},  data: {{ espec_data_json|safe }} }
+  };
+
+  const COLORS = {
+    primary:   '#4361ee',
+    secondary: '#3f37c9',
+    success:   '#4cc9f0',
+    info:      '#4895ef',
+    warning:   '#f59e0b',
+    danger:    '#e11d48',
+    multi:     ['#4361ee', '#4cc9f0', '#4895ef', '#3f37c9', '#480ca8', '#560bad', '#7209b7', '#b5179e']
+  };
+
+  function populateTable(id, labels, data, total) {
+    const tbody = document.getElementById(id);
+    labels.forEach((l, i) => {
+      const val = data[i];
+      const pct = total ? Math.round((val / total) * 100) : 0;
+      tbody.innerHTML += `
+        <tr>
+          <td><span class="fw-600 text-dark">${l}</span></td>
+          <td class="text-end">
+            <span class="fw-700">${val}</span>
+            <div class="progress progress-bar-small mt-1">
+              <div class="progress-bar bg-primary" style="width: ${pct}%"></div>
+            </div>
+          </td>
+        </tr>`;
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('last-updated').textContent = 'Actualizado: ' + new Date().toLocaleString();
+
+    // 1. Diagnoses
+    populateTable('table-diag', RAW_DATA.diag.labels, RAW_DATA.diag.data);
+    const diagChart = new Chart(document.getElementById('chart-diag'), {
+      type: 'bar',
+      data: {
+        labels: RAW_DATA.diag.labels,
+        datasets: [{
+          label: 'Pacientes',
+          data: RAW_DATA.diag.data,
+          backgroundColor: COLORS.warning,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, grid: { display: false } }, y: { grid: { display: false } } },
+        maintainAspectRatio: false,
+        onClick: (evt, elems, chart) => handleChartClick(evt, elems, chart, 'diagnostico')
+      }
+    });
+
+    // 2. Age Table & Chart
+    populateTable('table-age', RAW_DATA.age.labels, RAW_DATA.age.data, {{ total_pacientes }});
+    const ageChart = new Chart(document.getElementById('chart-age'), {
+      type: 'doughnut',
+      data: {
+        labels: RAW_DATA.age.labels,
+        datasets: [{
+          data: RAW_DATA.age.data,
+          backgroundColor: COLORS.multi,
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        cutout: '70%',
+        plugins: { legend: { display: false } },
+        maintainAspectRatio: false,
+        onClick: (evt, elems, chart) => handleChartClick(evt, elems, chart, 'edad')
+      }
+    });
+
+    // 3. Sexo Chart
+    const sexoChart = new Chart(document.getElementById('chart-sexo'), {
+      type: 'pie',
+      data: {
+        labels: RAW_DATA.sexo.labels,
+        datasets: [{
+          data: RAW_DATA.sexo.data,
+          backgroundColor: [COLORS.primary, COLORS.danger, COLORS.info],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } },
+        maintainAspectRatio: false,
+        onClick: (evt, elems, chart) => handleChartClick(evt, elems, chart, 'sexo')
+      }
+    });
+
+    // 4. Location Chart
+    const locChart = new Chart(document.getElementById('chart-loc'), {
+      type: 'polarArea',
+      data: {
+        labels: RAW_DATA.loc.labels,
+        datasets: [{
+          data: RAW_DATA.loc.data,
+          backgroundColor: COLORS.multi.map(c => c + 'aa')
+        }]
+      },
+      options: {
+        plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } },
+        scales: { r: { display: false } },
+        maintainAspectRatio: false,
+        onClick: (evt, elems, chart) => handleChartClick(evt, elems, chart, 'loc')
+      }
+    });
+
+    // 5. Specialty Chart
+    const especChart = new Chart(document.getElementById('chart-espec'), {
+      type: 'bar',
+      data: {
+        labels: RAW_DATA.espec.labels,
+        datasets: [{
+          label: 'Citas',
+          data: RAW_DATA.espec.data,
+          backgroundColor: COLORS.success,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, grid: { display: true } }, x: { grid: { display: false } } },
+        maintainAspectRatio: false,
+        onClick: (evt, elems, chart) => handleChartClick(evt, elems, chart, 'especialidad')
+      }
+    });
+
+  });
+</script>
+{% endblock %}

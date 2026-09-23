@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<style>
+  .area-header-banner {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .banner-icon {
+    position: absolute;
+    right: 20px;
+    top: -20px;
+    font-size: 8rem;
+    opacity: 0.05;
+    transform: rotate(-15deg);
+  }
+
+  .action-btn-group a {
+    min-width: 150px;
+    font-weight: 600;
+  }
+
+  .table-custom {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  }
+
+  .table-custom th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .table-custom td {
+    vertical-align: middle;
+    font-size: 0.95rem;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .badge-estado {
+    padding: 0.5em 0.8em;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+
+  .badge-agendada {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+  }
+
+  .badge-confirmada {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+
+  .badge-atendida {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+  }
+
+  .badge-cancelada {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  .avatar-circle {
+    width: 40px;
+    height: 40px;
+    background: #e2e8f0;
+    color: #475569;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+</style>
+
+<div class="d-flex align-items-center mb-3">
+  <a href="{% url 'dashboard' %}" class="btn btn-light shadow-sm text-secondary me-3"><i class="bi bi-arrow-left"></i>
+    Volver al Inicio</a>
+</div>
+
+<div class="area-header-banner mb-4 shadow-sm">
+  <i class="bi bi-heart-pulse-fill banner-icon"></i>
+  <div class="d-flex justify-content-between align-items-end position-relative z-1">
+    <div>
+      <span class="badge bg-white text-dark mb-2 shadow-sm rounded-pill px-3">Especialidad Médica</span>
+      <h2 class="mb-1 fw-bold">{{ area.nombre }}</h2>
+      <p class="mb-0 text-light opacity-75"><i class="bi bi-calendar3 me-2"></i> Atención del día: {{ hoy|date:"d de F, Y" }}</p>
+    </div>
+    <div class="d-flex gap-2 action-btn-group">
+      <a href="{% url 'citas:reporte_area_pdf' area.pk %}" target="_blank" class="btn btn-danger shadow-sm py-2">
+        <i class="bi bi-file-earmark-pdf-fill me-2"></i> Reporte PDF
+      </a>
+      <a href="{% url 'citas:reporte_area_csv' area.pk %}" class="btn btn-success shadow-sm py-2">
+        <i class="bi bi-file-earmark-excel-fill me-2"></i> Reporte Excel
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+  <div class="card-body p-0">
+    <div class="table-responsive table-custom">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th class="ps-4">Hora</th>
+            <th>Paciente</th>
+            <th>Cédula</th>
+            <th>Teléfono</th>
+            <th>Estatus</th>
+            <th class="text-end pe-4">Acciones de Secretaria</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cita in citas %}
+          <tr>
+            <td class="ps-4">
+              <span class="fw-bold fs-5 text-primary">{{ cita.fecha_cita|time:"H:i" }}</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar-circle">
+                  {{ cita.id_persona.id_nombre.nombre|make_list|first }}{{ cita.id_persona.id_apellido.nombre|make_list|first }}
+                </div>
+                <div>
+                  <div class="fw-bold">{{ cita.id_persona.id_nombre.nombre }} {{ cita.id_persona.id_apellido.nombre }}
+                  </div>
+                  <div class="small text-muted"><a href="{% url 'pacientes:detalle' cita.id_persona.pk %}"
+                      class="text-decoration-none">Ver perfil clínico <i class="bi bi-box-arrow-up-right"></i></a></div>
+                </div>
+              </div>
+            </td>
+            <td><code>{{ cita.id_persona.numero_documento }}</code></td>
+            <td>{{ cita.id_persona.telefono|default:'--' }}</td>
+            <td>
+              {% if cita.id_estado_cita.nombre == 'AGENDADA' %}
+              <span class="badge-estado badge-agendada"><i class="bi bi-calendar-minus me-1"></i> Espera</span>
+              {% elif cita.id_estado_cita.nombre == 'CONFIRMADA' %}
+              <span class="badge-estado badge-confirmada"><i class="bi bi-calendar-check me-1"></i> Asistencia
+                Conf.</span>
+              {% elif cita.id_estado_cita.nombre == 'COMPLETADA' %}
+              <span class="badge-estado badge-atendida"><i class="bi bi-check2-all me-1"></i> Atendida</span>
+              {% else %}
+              <span class="badge-estado badge-cancelada">{{ cita.id_estado_cita.nombre }}</span>
+              {% endif %}
+            </td>
+            <td class="text-end pe-4">
+              {% if cita.id_estado_cita.nombre == 'AGENDADA' or cita.id_estado_cita.nombre == 'CONFIRMADA' %}
+              <div class="btn-group shadow-sm">
+                <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3"
+                  onclick="abrirModalAccion({{ cita.id_cita }}, 'COMPLETADA', '{{ cita.id_persona.nombre_completo }}')">
+                  <i class="bi bi-check-lg"></i> Confirmar
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-3"
+                  onclick="abrirModalAccion({{ cita.id_cita }}, 'CANCELADA', '{{ cita.id_persona.nombre_completo }}')">
+                  <i class="bi bi-x-lg"></i> Cancelar
+                </button>
+              </div>
+              {% else %}
+              <span class="text-muted small fst-italic">Sin acciones (Cerrada)</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-5">
+              <i class="bi bi-clipboard2-check text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+              <h5 class="mt-3 fw-bold text-secondary">Día Libre</h5>
+              <p class="text-muted">No existen citas registradas para la especialidad de {{ area.nombre }} en el día de
+                hoy.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Acciones de Cita -->
+<div class="modal fade" id="accionCitaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalTituloAccion">Acción</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p id="modalMensajeAccion" class="text-secondary"></p>
+
+        <div id="divMotivoCancelacion" class="d-none mt-3">
+          <label class="form-label fw-bold text-danger">Motivo de Cancelación *</label>
+          <textarea class="form-control bg-light" id="motivoCancelacion" rows="3"
+            placeholder="Ej: Paciente no se presentó, reprogramado, etc."></textarea>
+        </div>
+
+        <input type="hidden" id="hdnCitaId">
+        <input type="hidden" id="hdnEstado">
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm"
+          id="btnProcesarAccion">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  let accionModal;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    accionModal = new bootstrap.Modal(document.getElementById('accionCitaModal'));
+
+    document.getElementById('btnProcesarAccion').addEventListener('click', () => {
+      const citaId = document.getElementById('hdnCitaId').value;
+      const estado = document.getElementById('hdnEstado').value;
+      const motivo = document.getElementById('motivoCancelacion').value.trim();
+
+      if (estado === 'CANCELADA' && !motivo) {
+        Swal.fire('Atención', 'Debe especificar el motivo de la cancelación.', 'warning');
+        return;
+      }
+
+      // Bloquear botón
+      const btn = document.getElementById('btnProcesarAccion');
+      const textOrigin = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
+      btn.disabled = true;
+
+      const formData = new FormData();
+      formData.append('estado', estado);
+      if (estado === 'CANCELADA') {
+        formData.append('motivo', motivo);
+      }
+
+      fetch(`/citas/area/actualizar-estado/${citaId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            Swal.fire('¡Éxito!', data.msg, 'success').then(() => {
+              location.reload();
+            });
+          } else {
+            Swal.fire('Error', data.error || 'No se pudo actualizar', 'error');
+            btn.innerHTML = textOrigin;
+            btn.disabled = false;
+          }
+        })
+        .catch(err => {
+          Swal.fire('Error', 'Ha ocurrido un problema de conexión', 'error');
+          btn.innerHTML = textOrigin;
+          btn.disabled = false;
+        });
+    });
+  });
+
+  function abrirModalAccion(citaId, nuevoEstado, paciente) {
+    document.getElementById('hdnCitaId').value = citaId;
+    document.getElementById('hdnEstado').value = nuevoEstado;
+    document.getElementById('motivoCancelacion').value = '';
+
+    const titulo = document.getElementById('modalTituloAccion');
+    const mensaje = document.getElementById('modalMensajeAccion');
+    const divMotivo = document.getElementById('divMotivoCancelacion');
+    const btnProcesar = document.getElementById('btnProcesarAccion');
+
+    if (nuevoEstado === 'COMPLETADA') {
+      titulo.innerHTML = '<i class="bi bi-check-circle-fill text-success me-2"></i>Hacer Check In';
+      mensaje.innerHTML = `¿Marcar la cita del paciente <strong>${paciente}</strong> como Completada? Esto confirmará que el paciente ha llegado e ingresado a consulta.`;
+      divMotivo.classList.add('d-none');
+      btnProcesar.className = 'btn btn-success rounded-pill px-4 shadow-sm';
+    } else {
+      titulo.innerHTML = '<i class="bi bi-x-circle-fill text-danger me-2"></i>Cancelar Cita';
+      mensaje.innerHTML = `¿Está seguro de cancelar la cita de <strong>${paciente}</strong>?`;
+      divMotivo.classList.remove('d-none');
+      btnProcesar.className = 'btn btn-danger rounded-pill px-4 shadow-sm';
+    }
+
+    accionModal.show();
+  }
+</script>
+{% endblock %}

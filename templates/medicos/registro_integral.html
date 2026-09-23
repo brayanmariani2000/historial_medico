@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% url 'medicos:lista' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <div>
+    <h4 class="mb-0 fw-700">{{ page_title }}</h4>
+    <small class="text-muted">Complete los datos del especialista médico</small>
+  </div>
+</div>
+
+<div class="wizard-card mx-auto" style="max-width: 960px;">
+  <div class="wizard-header wizard-header-green">
+    <h5><i class="bi bi-person-badge-fill me-2"></i>Registro de Personal Médico</h5>
+    <p>Ingrese los datos personales y credenciales profesionales del especialista.</p>
+    <i class="bi bi-person-badge wizard-header-icon"></i>
+  </div>
+
+  <ul class="nav wizard-steps wizard-steps-green" id="integralTabs" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" id="step1-tab" data-bs-toggle="tab" data-bs-target="#step1" type="button" role="tab"><span class="step-badge">1</span> Identidad</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="step2-tab" data-bs-toggle="tab" data-bs-target="#step2" type="button" role="tab"><span class="step-badge">2</span> Ubicación</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="step3-tab" data-bs-toggle="tab" data-bs-target="#step3" type="button" role="tab"><span class="step-badge">3</span> Perfil Social</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="step4-tab" data-bs-toggle="tab" data-bs-target="#step4" type="button" role="tab"><span class="step-badge">4</span> Credenciales</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="step5-tab" data-bs-toggle="tab" data-bs-target="#step5" type="button" role="tab"><span class="step-badge"><i class="bi bi-key"></i></span> Acceso</button></li>
+  </ul>
+
+  <form method="post" novalidate id="integralForm" class="form-wizard">
+    {% csrf_token %}
+    <div class="wizard-body">
+      
+      {% if persona_form.errors or medico_form.errors %}
+      <div class="error-banner">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div><strong>Revise los campos:</strong> Hay errores en el formulario. Navegue entre las pestañas para corregirlos.</div>
+      </div>
+      {% endif %}
+
+      <div class="tab-content">
+        <!-- Step 1 -->
+        <div class="tab-pane fade show active" id="step1">
+          <div class="section-divider"><i class="bi bi-person"></i> Información Personal</div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label>Primer Nombre <span class="text-danger">*</span></label>
+              {{ persona_form.primer_nombre }}
+              {% if persona_form.primer_nombre.errors %}<div class="text-danger small mt-1">{{ persona_form.primer_nombre.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Apellido <span class="text-danger">*</span></label>
+              {{ persona_form.apellido }}
+              {% if persona_form.apellido.errors %}<div class="text-danger small mt-1">{{ persona_form.apellido.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-3">
+              <label>Tipo Documento</label>
+              {{ persona_form.id_tipo_documento }}
+              {% if persona_form.id_tipo_documento.errors %}<div class="text-danger small mt-1">{{ persona_form.id_tipo_documento.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-5">
+              <label>N° de Documento <span class="text-danger">*</span></label>
+              {{ persona_form.numero_documento }}
+              {% if persona_form.numero_documento.errors %}<div class="text-danger small mt-1">{{ persona_form.numero_documento.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>Teléfono</label>
+              {{ persona_form.telefono }}
+              {% if persona_form.telefono.errors %}<div class="text-danger small mt-1">{{ persona_form.telefono.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-4">
+              <label>Sexo <span class="text-danger">*</span></label>
+              {{ persona_form.sexo }}
+              {% if persona_form.sexo.errors %}<div class="text-danger small mt-1">{{ persona_form.sexo.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>Fecha de Nacimiento <span class="text-danger">*</span></label>
+              {{ persona_form.fecha_nacimiento }}
+              {% if persona_form.fecha_nacimiento.errors %}<div class="text-danger small mt-1">{{ persona_form.fecha_nacimiento.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+          
+          <div class="wizard-nav" style="justify-content:flex-end;">
+            <button type="button" class="btn-wizard-next btn-green" onclick="switchTab('step2-tab')">Siguiente <i class="bi bi-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="tab-pane fade" id="step2">
+          <div class="section-divider"><i class="bi bi-geo-alt"></i> Dirección</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label>Municipio</label>
+              {{ persona_form.id_municipio }}
+              {% if persona_form.id_municipio.errors %}<div class="text-danger small mt-1">{{ persona_form.id_municipio.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Parroquia</label>
+              {{ persona_form.parroquia }}
+              {% if persona_form.parroquia.errors %}<div class="text-danger small mt-1">{{ persona_form.parroquia.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Sector</label>
+              {{ persona_form.id_sector }}
+              {% if persona_form.id_sector.errors %}<div class="text-danger small mt-1">{{ persona_form.id_sector.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Calle</label>
+              {{ persona_form.id_calle }}
+              {% if persona_form.id_calle.errors %}<div class="text-danger small mt-1">{{ persona_form.id_calle.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="wizard-nav">
+            <button type="button" class="btn-wizard-prev" onclick="switchTab('step1-tab')"><i class="bi bi-arrow-left"></i> Anterior</button>
+            <button type="button" class="btn-wizard-next btn-green" onclick="switchTab('step3-tab')">Siguiente <i class="bi bi-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="tab-pane fade" id="step3">
+          <div class="section-divider"><i class="bi bi-people"></i> Perfil Social</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label>Pertenencia Étnica</label>
+              {{ persona_form.id_etnia }}
+              {% if persona_form.id_etnia.errors %}<div class="text-danger small mt-1">{{ persona_form.id_etnia.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Tipo de Sangre</label>
+              {{ persona_form.id_tipo_sangre }}
+              {% if persona_form.id_tipo_sangre.errors %}<div class="text-danger small mt-1">{{ persona_form.id_tipo_sangre.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="wizard-nav">
+            <button type="button" class="btn-wizard-prev" onclick="switchTab('step2-tab')"><i class="bi bi-arrow-left"></i> Anterior</button>
+            <button type="button" class="btn-wizard-next btn-green" onclick="switchTab('step4-tab')">Siguiente <i class="bi bi-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="tab-pane fade" id="step4">
+          <div class="section-divider"><i class="bi bi-mortarboard"></i> Credenciales Profesionales</div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label>N° Registro MSAS <span class="text-danger">*</span></label>
+              {{ medico_form.numero_registro }}
+              {% if medico_form.numero_registro.errors %}<div class="text-danger small mt-1">{{ medico_form.numero_registro.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>Fecha de Contratación</label>
+              {{ medico_form.fecha_contratacion }}
+              {% if medico_form.fecha_contratacion.errors %}<div class="text-danger small mt-1">{{ medico_form.fecha_contratacion.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>Estado</label>
+              {{ medico_form.estado }}
+              {% if medico_form.estado.errors %}<div class="text-danger small mt-1">{{ medico_form.estado.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label>Grado de Instrucción</label>
+              {{ medico_form.nivel_academico }}
+              {% if medico_form.nivel_academico.errors %}<div class="text-danger small mt-1">{{ medico_form.nivel_academico.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+               <div class="info-banner" style="background: #f8fafc; border-color: #e2e8f0; border-left-color: #10b981; color: #334155;">
+                <i class="bi bi-info-circle-fill" style="color: #10b981;"></i>
+                <div>La cuenta de usuario se configurará en el siguiente paso.</div>
+               </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-top">
+            <div class="section-divider"><i class="bi bi-mortarboard-fill"></i> Especialidades</div>
+            <div id="especialidades-container"></div>
+            <button type="button" class="btn btn-outline-success btn-sm mt-2" onclick="agregarEspecialidad()">
+              <i class="bi bi-plus-circle me-1"></i> Añadir Especialidad
+            </button>
+          </div>
+
+          <div class="wizard-nav">
+            <button type="button" class="btn-wizard-prev" onclick="switchTab('step3-tab')"><i class="bi bi-arrow-left"></i> Anterior</button>
+            <button type="button" class="btn-wizard-next btn-green" onclick="switchTab('step5-tab')">Siguiente <i class="bi bi-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Step 5: Cuenta de Acceso -->
+        <div class="tab-pane fade" id="step5">
+          <div class="section-divider"><i class="bi bi-key"></i> Credenciales del Sistema</div>
+          <div class="info-banner mb-3" style="background: #f0fdf4; border-color: #d1fae5; border-left-color: #059669; color: #064e3b;">
+            <i class="bi bi-shield-check" style="color: #059669;"></i>
+            <div>Configure la cuenta con la que el médico accederá al sistema. El rol de acceso será automáticamente <strong>MÉDICO</strong>.</div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label>Usuario (Login) <span class="text-danger">*</span></label>
+              {{ usuario_form.username }}
+              {% if usuario_form.username.errors %}<div class="text-danger small mt-1">{{ usuario_form.username.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Correo Electrónico</label>
+              {{ usuario_form.email }}
+              {% if usuario_form.email.errors %}<div class="text-danger small mt-1">{{ usuario_form.email.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label>Contraseña <span class="text-danger">*</span></label>
+              {{ usuario_form.password1 }}
+              {% if usuario_form.password1.errors %}<div class="text-danger small mt-1">{{ usuario_form.password1.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Confirmar Contraseña <span class="text-danger">*</span></label>
+              {{ usuario_form.password2 }}
+              {% if usuario_form.password2.errors %}<div class="text-danger small mt-1">{{ usuario_form.password2.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-6" style="display: none;">
+              <!-- Ocultamos campos del perfil que se heredan automáticamente de Persona y Rol -->
+              {{ usuario_form.rol }}
+              {{ usuario_form.first_name }}
+              {{ usuario_form.last_name }}
+              {{ usuario_form.telefono }}
+            </div>
+          </div>
+          
+          <div class="wizard-nav">
+            <button type="button" class="btn-wizard-prev" onclick="switchTab('step4-tab')"><i class="bi bi-arrow-left"></i> Anterior</button>
+            <button type="submit" class="btn-wizard-submit" style="background: linear-gradient(135deg, #059669, #10b981);"><i class="bi bi-check2-circle"></i> Finalizar Registro y Crear Cuenta</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+function switchTab(id) { 
+  new bootstrap.Tab(document.getElementById(id)).show(); 
+  document.querySelector('.wizard-card').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const chainSetup = (p, c, u) => {
+    p.addEventListener('change', () => {
+      c.innerHTML = '<option value="">---------</option>';
+      const cSelect = document.getElementById('{{ persona_form.id_calle.id_for_label }}');
+      if (c === document.getElementById('{{ persona_form.id_sector.id_for_label }}') && cSelect) cSelect.innerHTML = '<option value="">---------</option>';
+      if (!p.value) return;
+      fetch(u + p.value).then(r => r.json()).then(data => {
+        data.forEach(item => { const k = Object.keys(item); const o = document.createElement('option'); o.value = item[k[0]]; o.text = item[k[1]]; c.add(o); });
+      });
+    });
+  };
+  
+  const mSelect = document.getElementById('{{ persona_form.id_municipio.id_for_label }}');
+  const pSelect = document.getElementById('{{ persona_form.parroquia.id_for_label }}');
+  const sSelect = document.getElementById('{{ persona_form.id_sector.id_for_label }}');
+  const cSelect = document.getElementById('{{ persona_form.id_calle.id_for_label }}');
+  
+  if(mSelect && pSelect) chainSetup(mSelect, pSelect, '/core/ajax/parroquias/?municipio_id=');
+  if(pSelect && sSelect) chainSetup(pSelect, sSelect, '/core/ajax/sectores/?parroquia_id=');
+  if(sSelect && cSelect) chainSetup(sSelect, cSelect, '/core/ajax/calles/?sector_id=');
+
+  if (allEspecs.length > 0) agregarEspecialidad();
+  
+  const invalidFields = document.querySelectorAll('.is-invalid, .text-danger.small');
+  if (invalidFields.length > 0) {
+    const errTab = invalidFields[0].closest('.tab-pane');
+    if (errTab) switchTab(`${errTab.id}-tab`);
+  }
+});
+
+const allEspecs = [{% for es in all_especialidades %}{id:"{{ es.pk }}", nombre:"{{ es.nombre }}"}{% if not forloop.last %},{% endif %}{% endfor %}];
+const nivChoices = [{% for k, v in nivel_choices %}{id:"{{ k }}", nombre:"{{ v }}"}{% if not forloop.last %},{% endif %}{% endfor %}];
+let espCount = 0;
+
+function agregarEspecialidad() {
+  const container = document.getElementById('especialidades-container');
+  const d = document.createElement('div');
+  d.className = 'esp-row row g-3 align-items-end mb-3';
+  let espOpts = '<option value="">— Especialidad —</option>';
+  allEspecs.forEach(e => espOpts += `<option value="${e.id}">${e.nombre}</option>`);
+  let nivOpts = '';
+  nivChoices.forEach(n => nivOpts += `<option value="${n.id}">${n.nombre}</option>`);
+  d.innerHTML = `
+    <div class="col-md-3"><label class="form-label small fw-600">Especialidad</label><select name="esp_especialidad_${espCount}" class="form-select" required>${espOpts}</select></div>
+    <div class="col-md-3"><label class="form-label small fw-600">Nivel</label><select name="esp_nivel_${espCount}" class="form-select" required>${nivOpts}</select></div>
+    <div class="col-md-2"><label class="form-label small fw-600">Fecha Cert.</label><input type="date" name="esp_fecha_${espCount}" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label small fw-600">Institución</label><input type="text" name="esp_inst_${espCount}" class="form-control" placeholder="Universidad / Hospital"></div>
+    <div class="col-md-1 text-end"><button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.esp-row').remove()"><i class="bi bi-trash"></i></button></div>
+  `;
+  container.appendChild(d);
+  espCount++;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% url 'pacientes:lista' %}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i></a>
+  <div>
+    <h4 class="mb-0 fw-700">{{ page_title }}</h4>
+    <small class="text-muted">Complete todos los campos para registrar al paciente</small>
+  </div>
+</div>
+
+<div class="wizard-card mx-auto" style="max-width: 1060px;">
+  <!-- Header -->
+  <div class="wizard-header">
+    <h5><i class="bi bi-person-plus-fill me-2"></i>Formulario Central de Registro</h5>
+    <p>Ingrese los datos para registrar al paciente y agendar su cita vinculada.</p>
+    <i class="bi bi-person-lines-fill wizard-header-icon"></i>
+  </div>
+
+  <!-- Steps -->
+  <ul class="nav wizard-steps" id="unifiedTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="step1-tab" data-bs-toggle="tab" data-bs-target="#step1" type="button" role="tab">
+        <span class="step-badge">1</span> Datos Personales
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="step2-tab" data-bs-toggle="tab" data-bs-target="#step2" type="button" role="tab">
+        <span class="step-badge">2</span> Domicilio
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="step3-tab" data-bs-toggle="tab" data-bs-target="#step3" type="button" role="tab">
+        <span class="step-badge">3</span> Salud y Etnia
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="step4-tab" data-bs-toggle="tab" data-bs-target="#step4" type="button" role="tab">
+        <span class="step-badge"><i class="bi bi-calendar-plus" style="font-size:0.7rem;"></i></span> Agendar Cita
+      </button>
+    </li>
+  </ul>
+
+  <form method="post" novalidate id="unifiedForm">
+    {% csrf_token %}
+    <div class="wizard-body">
+
+      {% if form.errors or cita_form.errors %}
+      <div class="error-banner">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div><strong>Revise los campos:</strong> Hay errores en el formulario. Navegue entre las pestañas para corregirlos.</div>
+      </div>
+      {% endif %}
+
+      <div class="tab-content" id="unifiedTabsContent">
+
+        <!-- Step 1: Datos Personales -->
+        <div class="tab-pane fade show active" id="step1">
+          <div class="section-divider"><i class="bi bi-person"></i> Información Personal</div>
+          
+          <div class="row g-3">
+            <!-- Row 1: Nombre y Apellido (igual ancho) -->
+            <div class="col-md-6">
+              <label>Primer Nombre <span class="text-danger">*</span></label>
+              {{ form.primer_nombre }}
+              {% if form.primer_nombre.errors %}<div class="text-danger small mt-1">{{ form.primer_nombre.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Apellido <span class="text-danger">*</span></label>
+              {{ form.apellido }}
+              {% if form.apellido.errors %}<div class="text-danger small mt-1">{{ form.apellido.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Row 2: Tipo Doc (pequeño), N Doc (mediano), Telefono (mediano) -->
+            <div class="col-md-3">
+              <label>Tipo Documento</label>
+              {{ form.id_tipo_documento }}
+              {% if form.id_tipo_documento.errors %}<div class="text-danger small mt-1">{{ form.id_tipo_documento.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-5">
+              <label>N° de Documento <span class="text-danger">*</span></label>
+              {{ form.numero_documento }}
+              {% if form.numero_documento.errors %}<div class="text-danger small mt-1">{{ form.numero_documento.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>Teléfono</label>
+              {{ form.telefono }}
+              {% if form.telefono.errors %}<div class="text-danger small mt-1">{{ form.telefono.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Row 3: Sexo, Fecha Nac, Privado Libertad -->
+            <div class="col-md-4">
+              <label>Sexo <span class="text-danger">*</span></label>
+              {{ form.sexo }}
+              {% if form.sexo.errors %}<div class="text-danger small mt-1">{{ form.sexo.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>Fecha de Nacimiento <span class="text-danger">*</span></label>
+              {{ form.fecha_nacimiento }}
+              {% if form.fecha_nacimiento.errors %}<div class="text-danger small mt-1">{{ form.fecha_nacimiento.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <div class="form-check check-card d-flex align-items-center gap-2 w-100 m-0">
+                {{ form.privado_de_libertad }}
+                <label class="form-check-label fw-600 mb-0" style="font-size:0.85rem;color:#334155;">¿Privado de libertad?</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="wizard-nav" style="justify-content:flex-end;">
+            <button type="button" class="btn-wizard-next" onclick="switchTab('step2-tab')">
+              Siguiente <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Domicilio -->
+        <div class="tab-pane fade" id="step2">
+          <div class="info-banner">
+            <i class="bi bi-info-circle-fill"></i>
+            <div>Use el botón <strong><i class="bi bi-plus-lg"></i></strong> para registrar un sector o calle nueva sin perder el progreso.</div>
+          </div>
+          <div class="section-divider"><i class="bi bi-geo-alt"></i> Dirección del Paciente</div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label>Municipio</label>
+              {{ form.id_municipio }}
+              {% if form.id_municipio.errors %}<div class="text-danger small mt-1">{{ form.id_municipio.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Parroquia</label>
+              {{ form.parroquia }}
+              {% if form.parroquia.errors %}<div class="text-danger small mt-1">{{ form.parroquia.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label>Sector</label>
+              <div class="input-group">
+                {{ form.id_sector }}
+                <button class="btn btn-outline-primary" type="button" onclick="showAddModal('sector')"><i class="bi bi-plus-lg"></i></button>
+              </div>
+              {% if form.id_sector.errors %}<div class="text-danger small mt-1">{{ form.id_sector.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Calle</label>
+              <div class="input-group">
+                {{ form.id_calle }}
+                <button class="btn btn-outline-primary" type="button" onclick="showAddModal('calle')"><i class="bi bi-plus-lg"></i></button>
+              </div>
+              {% if form.id_calle.errors %}<div class="text-danger small mt-1">{{ form.id_calle.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="wizard-nav">
+            <button type="button" class="btn-wizard-prev" onclick="switchTab('step1-tab')"><i class="bi bi-arrow-left"></i> Anterior</button>
+            <button type="button" class="btn-wizard-next" onclick="switchTab('step3-tab')">Siguiente <i class="bi bi-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Step 3: Salud y Etnia -->
+        <div class="tab-pane fade" id="step3">
+          <div class="row g-4">
+            <!-- Left col -->
+            <div class="col-md-6">
+              <div class="section-divider"><i class="bi bi-droplet-fill"></i> Información Biológica</div>
+              <div class="mb-3">
+                <label>Tipo de Sangre</label>
+                {{ form.id_tipo_sangre }}
+                {% if form.id_tipo_sangre.errors %}<div class="text-danger small mt-1">{{ form.id_tipo_sangre.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label>Etnia</label>
+                {{ form.id_etnia }}
+                {% if form.id_etnia.errors %}<div class="text-danger small mt-1">{{ form.id_etnia.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+            
+            <!-- Right col -->
+            <div class="col-md-6">
+              <div class="section-divider"><i class="bi bi-exclamation-triangle"></i> Alergias</div>
+              <div class="mb-3">
+                <label>Tipo de Alergia</label>
+                {{ form.alergia_tipo }}
+                {% if form.alergia_tipo.errors %}<div class="text-danger small mt-1">{{ form.alergia_tipo.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label>Sustancia / Objeto</label>
+                {{ form.alergia_nombre }}
+                {% if form.alergia_nombre.errors %}<div class="text-danger small mt-1">{{ form.alergia_nombre.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="mb-3">
+                <label>Severidad</label>
+                {{ form.alergia_severidad }}
+                {% if form.alergia_severidad.errors %}<div class="text-danger small mt-1">{{ form.alergia_severidad.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+            
+            <!-- Discapacidades -->
+            <div class="col-12">
+              <div class="section-divider"><i class="bi bi-universal-access"></i> Discapacidades</div>
+              <div class="row g-2">
+                {% for box in form.discapacidades_list %}
+                <div class="col-md-4">
+                  <div class="check-card d-flex align-items-center gap-2">
+                    {{ box.tag }}
+                    <label class="mb-0" style="font-size:0.845rem;color:#334155;cursor:pointer;" for="{{ box.id_for_label }}">{{ box.choice_label }}</label>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              {% if form.discapacidades_list.errors %}<div class="text-danger small mt-1">{{ form.discapacidades_list.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="wizard-nav">
+            <button type="button" class="btn-wizard-prev" onclick="switchTab('step2-tab')"><i class="bi bi-arrow-left"></i> Anterior</button>
+            <button type="button" class="btn-wizard-next" onclick="switchTab('step4-tab')">Agendar Cita <i class="bi bi-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Step 4: Agendar Cita -->
+        <div class="tab-pane fade" id="step4">
+          <div class="appointment-card">
+            <i class="bi bi-calendar2-check-fill"></i>
+            <div>
+              <strong style="color:#1e40af;font-size:0.9rem;">Agendamiento de Cita</strong>
+              <p class="mb-0 small text-muted">Seleccione el servicio y el horario disponible para el paciente.</p>
+            </div>
+          </div>
+          <div class="section-divider"><i class="bi bi-calendar-plus"></i> Datos de la Cita</div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label>Especialidad</label>
+              {{ cita_form.id_especialidad }}
+              {% if cita_form.id_especialidad.errors %}<div class="text-danger small mt-1">{{ cita_form.id_especialidad.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label>Médico Asignado <span class="text-danger">*</span></label>
+              {{ cita_form.id_medico }}
+              {% if cita_form.id_medico.errors %}<div class="text-danger small mt-1">{{ cita_form.id_medico.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="col-md-4">
+              <label>Tipo de Cita <span class="text-danger">*</span></label>
+              {{ cita_form.id_tipo_consulta }}
+              {% if cita_form.id_tipo_consulta.errors %}<div class="text-danger small mt-1">{{ cita_form.id_tipo_consulta.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>Fecha y Hora <span class="text-danger">*</span></label>
+              {{ cita_form.fecha_cita }}
+              <div id="availInfo" class="mt-1 small d-none"></div>
+              {% if cita_form.fecha_cita.errors %}<div class="text-danger small mt-1">{{ cita_form.fecha_cita.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label>Motivo de la Consulta</label>
+              {{ cita_form.motivo_consulta }}
+              {% if cita_form.motivo_consulta.errors %}<div class="text-danger small mt-1">{{ cita_form.motivo_consulta.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="wizard-nav">
+            <button type="button" class="btn-wizard-prev" onclick="switchTab('step3-tab')"><i class="bi bi-arrow-left"></i> Anterior</button>
+            <button type="submit" class="btn-wizard-submit">
+              <i class="bi bi-check-circle-fill"></i> Guardar Perfil y Cita
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addMetadataModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+      <div class="modal-header bg-light border-0">
+        <h5 class="modal-title fw-700 text-dark" id="metadataModalLabel">Añadir Nueva Ubicación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4 bg-white">
+        <label id="modalInputLabel" class="form-label fw-600 text-secondary">Nombre</label>
+        <input type="text" id="metadataName" class="form-control form-control-lg bg-light border-0" placeholder="Ej. Barrio Los Pinos">
+        <input type="hidden" id="metadataType">
+      </div>
+      <div class="modal-footer border-0 bg-white">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="submitMetadata()">Guardar y Asociar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let bootstrapModal;
+function switchTab(id) {
+  const triggerEl = document.querySelector(`#${id}`);
+  new bootstrap.Tab(triggerEl).show();
+  document.querySelector('.wizard-card').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+function showAddModal(type) {
+  const label = type === 'sector' ? 'Nombre del Nuevo Sector' : 'Nombre de la Nueva Calle';
+  document.getElementById('modalInputLabel').innerText = label;
+  document.getElementById('metadataType').value = type;
+  document.getElementById('metadataName').value = '';
+  if (type === 'sector') {
+    const pId = document.getElementById('{{ form.parroquia.id_for_label }}').value;
+    if (!pId) { Swal.fire('Atención', 'Debe seleccionar una parroquia primero', 'warning'); return; }
+  } else {
+    const sId = document.getElementById('{{ form.id_sector.id_for_label }}').value;
+    if (!sId) { Swal.fire('Atención', 'Debe seleccionar un sector primero', 'warning'); return; }
+  }
+  bootstrapModal = new bootstrap.Modal(document.getElementById('addMetadataModal'));
+  bootstrapModal.show();
+}
+
+function submitMetadata() {
+  const type = document.getElementById('metadataType').value;
+  const nombre = document.getElementById('metadataName').value.trim();
+  if (!nombre) return;
+  const url = type === 'sector' ? '/core/ajax/crear-sector/' : '/core/ajax/crear-calle/';
+  const payload = { nombre };
+  if (type === 'sector') payload.parroquia_id = document.getElementById('{{ form.parroquia.id_for_label }}').value;
+  else payload.sector_id = document.getElementById('{{ form.id_sector.id_for_label }}').value;
+  
+  fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' }, body: JSON.stringify(payload) })
+  .then(r => r.json()).then(data => {
+    if (data.error) { Swal.fire('Error', data.error, 'error'); return; }
+    const select = document.getElementById(type === 'sector' ? '{{ form.id_sector.id_for_label }}' : '{{ form.id_calle.id_for_label }}');
+    const opt = document.createElement('option');
+    opt.value = data.id; opt.text = data.nombre; opt.selected = true; select.add(opt);
+    bootstrapModal.hide();
+    if (type === 'sector') { const c = document.getElementById('{{ form.id_calle.id_for_label }}'); c.innerHTML = '<option value="">---------</option>'; }
+    Swal.fire({ icon: 'success', title: '¡Añadido!', showConfirmButton: false, timer: 1500 });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const chainSetup = (pId, cId, url) => {
+    const p = document.getElementById(pId), c = document.getElementById(cId);
+    if (!p || !c) return;
+    p.addEventListener('change', () => {
+      c.innerHTML = '<option value="">---------</option>';
+      if (cId === '{{ form.id_sector.id_for_label }}') { const c2 = document.getElementById('{{ form.id_calle.id_for_label }}'); if (c2) c2.innerHTML = '<option value="">---------</option>'; }
+      if (!p.value) return;
+      fetch(url + p.value).then(r => r.json()).then(data => {
+        data.forEach(item => { const k = Object.keys(item); const o = document.createElement('option'); o.value = item[k[0]]; o.text = item[k[1]]; c.add(o); });
+      });
+    });
+  };
+  chainSetup('{{ form.id_municipio.id_for_label }}', '{{ form.parroquia.id_for_label }}', '/core/ajax/parroquias/?municipio_id=');
+  chainSetup('{{ form.parroquia.id_for_label }}', '{{ form.id_sector.id_for_label }}', '/core/ajax/sectores/?parroquia_id=');
+  chainSetup('{{ form.id_sector.id_for_label }}', '{{ form.id_calle.id_for_label }}', '/core/ajax/calles/?sector_id=');
+
+  const espSelect = document.getElementById('{{ cita_form.id_especialidad.id_for_label }}');
+  const docSelect = document.getElementById('{{ cita_form.id_medico.id_for_label }}');
+  if (espSelect && docSelect) {
+    espSelect.addEventListener('change', () => {
+      docSelect.innerHTML = '<option value="">---------</option>';
+      if (!espSelect.value) return;
+      fetch(`/core/ajax/medicos-por-especialidad/?especialidad_id=${espSelect.value}`).then(r => r.json()).then(data => {
+        data.forEach(m => { const o = document.createElement('option'); o.value = m.id; o.text = m.nombre; docSelect.add(o); });
+      });
+    });
+  }
+
+  const fechaIn = document.getElementById('{{ cita_form.fecha_cita.id_for_label }}');
+  const availDiv = document.getElementById('availInfo');
+  if (fechaIn && availDiv) {
+    fechaIn.addEventListener('change', () => {
+      const d = fechaIn.value.split('T')[0];
+      if (!d) { availDiv.classList.add('d-none'); return; }
+      fetch(`/core/ajax/disponibilidad-fecha/?fecha=${d}`).then(r => r.json()).then(data => {
+        availDiv.classList.remove('d-none');
+        availDiv.textContent = data.count === 0 ? '✓ Agenda libre para este día.' : `⚡ ${data.count} consultas ya registradas este día.`;
+        availDiv.className = `mt-1 small fw-600 ${data.count === 0 ? 'text-success' : 'text-warning'}`;
+      });
+    });
+  }
+
+  const invalidFields = document.querySelectorAll('.is-invalid');
+  if (invalidFields.length > 0) {
+    const errTab = invalidFields[0].closest('.tab-pane');
+    if (errTab) switchTab(`${errTab.id}-tab`);
+  }
+});
+</script>
+{% endblock %}
